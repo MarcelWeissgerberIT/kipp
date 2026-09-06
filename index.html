@@ -6,6 +6,12 @@
 <title>Kipp – Brett kippen, Reihen räumen</title>
 <meta name="description" content="Fallende Steine, aber das Brett lässt sich kippen. Ein kleines Browser-Spiel, eine HTML-Datei.">
 <meta name="theme-color" content="#0F1F18">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kipp">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -53,6 +59,12 @@
   @media (min-width:1500px) and (min-height:900px){
     .dpad{transform:scale(1.15)} .keys{font-size:1rem;gap:10px} .keys kbd{font-size:.85rem} h1{font-size:2.5rem} .stats b{font-size:1.9rem} .stats small{font-size:.66rem}
     .nextbox{width:64px;height:64px;padding:8px} .nextbox canvas{width:48px;height:48px} .chip{height:36px;font-size:.8rem} .charges .lbl{font-size:.7rem} .bat i{width:14px;height:14px}
+  }
+  @media (orientation:landscape) and (max-height:520px) and (max-width:959px){
+    :root{--arena:max(240px,min(100vh - 120px,100vw - 250px))}
+    .world{display:grid;grid-template-columns:var(--arena) auto;grid-template-areas:'head pad' 'arena pad' 'charges pad';column-gap:14px;row-gap:6px;align-items:center;justify-items:center}
+    header{grid-area:head;width:var(--arena)} .arena{grid-area:arena} .charges{grid-area:charges} .dpad{grid-area:pad;transform:scale(.85)} .keys{display:none}
+    body{padding:8px}
   }
   @media (max-width:440px){
     header{gap:6px;padding:0} h1{font-size:1.5rem} .stats{gap:6px} .stats b{font-size:1.2rem} .stats small{font-size:.5rem;letter-spacing:.1em}
@@ -110,6 +122,12 @@
   .tiles b{font-family:Bungee,sans-serif;font-size:1.1rem;line-height:1.2} .tiles span:last-child b{color:var(--ochre)} .tiles small{font-size:.55rem;letter-spacing:.14em}
   .inilbl{font-size:.62rem;letter-spacing:.18em;width:100%;text-align:center;margin-top:6px}
   .endrow{display:flex;gap:8px;width:min(100%,340px)} .endrow button{flex:1;padding:0}
+  #lov{justify-content:flex-start;padding-top:56px;z-index:12}
+  .legend{display:flex;flex-direction:column;gap:6px;width:min(100%,400px);text-align:left}
+  .legend h3{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:800;margin-top:10px}
+  .legend .row{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:center;font-size:.85rem;font-weight:600;color:var(--dim);line-height:1.3}
+  .legend .row canvas{width:30px;height:30px;display:block} .legend .row b{color:var(--chalk);font-weight:800}
+  #legendBtn,#tutBtn{flex:1} #tutBtn{border:0;background:transparent}
   .overlay>*{flex-shrink:0}
   .overlay{gap:12px}
   @media (max-width:420px){.sizes{grid-template-columns:repeat(2,1fr)}}
@@ -152,7 +170,7 @@
   .switch button i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--chalk);transition:left .15s}
   .switch button[aria-checked="true"]{background:#FF5E5B} .switch button[aria-checked="true"] i{left:23px}
 .seg.modes{grid-template-columns:repeat(4,1fr)}
-  .seg.chapters{grid-template-columns:repeat(3,1fr)}
+  .seg.chapters{grid-template-columns:repeat(4,1fr)} .seg.chapters button{font-size:.8rem;gap:5px;padding:6px 2px}
   .story{display:flex;flex-direction:column;gap:8px}
   .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
   .levels button{height:auto;padding:6px 0;flex-direction:column;gap:2px;background:rgba(0,0,0,.25);box-shadow:none;border:0;border-radius:9px;color:var(--dim);font-size:.95rem}
@@ -265,8 +283,13 @@
   <p id="povText" class="tagline"></p>
   <div class="pstats"><span><b id="pScore">0</b><small id="pLblScore"></small></span><span><b id="pLines">0</b><small id="pLblRows"></small></span><span><b id="pLevel">1</b><small id="pLblLevel"></small></span></div>
   <button class="start" id="resumeBtn"></button>
-  <button id="quitBtn" class="toggle"></button>
+  <div class="endrow"><button id="quitBtn" class="toggle"></button><button id="pLegendBtn" class="toggle"></button></div>
   <span class="foot" id="povHint"></span>
+</div>
+<div class="overlay" id="lov">
+  <h2 id="lovTitle"></h2>
+  <div class="legend" id="legendList"></div>
+  <button class="start" id="lovClose"></button>
 </div>
 <div class="overlay show" id="ov">
   <button id="langBtn" class="mute lang" aria-label="Language">DE</button>
@@ -292,6 +315,7 @@
       <p class="note" id="dailyNote" hidden></p>
       <div class="chlist" id="chlist" hidden></div>
       <div class="story" id="storyBox" hidden><div class="seg chapters" id="chapters" role="radiogroup"></div><div class="levels" id="levels"></div><p class="note" id="storyNote"></p></div>
+      <div class="toggles" id="pupToggle"><label class="switch"><span id="lblPups"></span><button id="pupsBtn" role="switch" aria-checked="true"><i></i></button></label></div>
     </section>
     <section id="boardSec"><h3 id="lblBoard"></h3><div class="seg sizes" id="sizes" role="radiogroup"></div>
       <h3 id="lblShapes" class="sub"></h3><div class="seg shapes" id="shapes" role="radiogroup"></div>
@@ -301,7 +325,8 @@
   </div>
   <button class="start" id="startBtn"></button>
   <div class="endrow" id="endRow" hidden><button id="shareBtn" class="toggle" hidden></button><button id="menuBtn" class="toggle"></button></div>
-  <button id="tutBtn" class="toggle"></button>
+  <button id="resumeRunBtn" class="toggle" hidden></button>
+  <div class="endrow"><button id="tutBtn" class="toggle"></button><button id="legendBtn" class="toggle"></button></div>
 </div>
 
 
@@ -332,7 +357,7 @@ const I18N={
     overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} auto-tips survived.`,
     winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} auto-tips. Try it with fewer tips?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} auto-tips`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Kipps the board after timeout',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the auto-tip timer',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Auto-tip frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pupAcid:'Acid piece',pupMirror:'Mirror piece',pupFeather:'Feather piece',pupGlue:'Glue piece',pupJoker:'Joker piece',pupThief:'Time thief',hintAcid:'dissolves the column below',hintMirror:'flips your next tip',hintFeather:'next piece falls slowly',hintGlue:'sticks to the wall for one tip',hintJoker:'its row counts double',hintThief:'resets the timer',acid:'Acid!',mirror:'Mirrored!',feather:'Feather: slow piece',stuck:'Stuck!',joker:'Joker ×2',thief:'Timer reset',sweep:'Clean sweep!',shatter:'Ice shatters!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. The auto-tip timer waits with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Auto-tips',lblCombo:'Combo',
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Kipps the board after timeout',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the auto-tip timer',hintCharge:'double tip charge',hintGhost:'falls through everything',legend:'Legend',legMaterials:'Materials',legMarks:'Markers',legPups:'Power-up pieces',legAnchor:'holds its body in place when the board tips',legCrack:'this cell breaks off at the first tip',anchor:'Anchor',crack:'Crack',close:'Close',lblPups:'Power-up pieces',resumeRun:'Continue last run',boom:'Boom!',frozen:'Auto-tip frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pupAcid:'Acid piece',pupMirror:'Mirror piece',pupFeather:'Feather piece',pupGlue:'Glue piece',pupJoker:'Joker piece',pupThief:'Time thief',hintAcid:'dissolves the column below',hintMirror:'flips your next tip',hintFeather:'next piece falls slowly',hintGlue:'sticks to the wall for one tip',hintJoker:'its row counts double',hintThief:'resets the timer',acid:'Acid!',mirror:'Mirrored!',feather:'Feather: slow piece',stuck:'Stuck!',joker:'Joker ×2',thief:'Timer reset',sweep:'Clean sweep!',shatter:'Ice shatters!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. The auto-tip timer waits with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Auto-tips',lblCombo:'Combo',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -342,7 +367,7 @@ const I18N={
       'Rows that only complete after a tip count as a chain: ×3 in Jelly, then ×9.',
       'Tipping costs a charge (the blue dots). Every full row refills one.',
       'The bar under the board fills up. When it is full, the board tips by itself. Tipping yourself resets it.',
-      'That is all. Anchors, cracks, materials and power-up pieces you will discover while playing.'],
+      'That is all. Anchors, cracks, materials and power-up pieces are explained in the legend.'],
     tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material'],['Esc / P','Pause']],quakeBar:'Time until the auto-tip',size:'Board size',mute:'Sound off',unmute:'Sound on'},
   de:{intro:'Fallende Steine – aber das Brett kippt. Alles, was nicht aufliegt, fällt.',
     sizes:['Weit','Normal','Eng','Brutal'],lblShapes:'Formen',shapes:['Standard','Erweitert','Ultra'],shapeSub:['3–5 Blöcke','4–8 Blöcke','4–16 Blöcke'],modes:['Endlos','Tagesbrett','Story','Challenges'],quakeOn:'Auto-Kipp an',quakeOff:'Auto-Kipp aus',
@@ -351,7 +376,7 @@ const I18N={
     overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Auto-Kipps überstanden.`,
     winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Auto-Kipps. Schaffst du es mit weniger Kipps?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Auto-Kipps`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Kippt das Board nach Zeituhr',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert die Zeituhr ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Auto-Kipp 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pupAcid:'Säurestein',pupMirror:'Spiegelstein',pupFeather:'Federstein',pupGlue:'Klebestein',pupJoker:'Jokerstein',pupThief:'Zeitdieb',hintAcid:'löst die Spalte darunter auf',hintMirror:'dreht deinen nächsten Kipp um',hintFeather:'nächster Stein fällt langsam',hintGlue:'klebt einen Kipp lang an der Wand',hintJoker:'seine Reihe zählt doppelt',hintThief:'setzt die Zeituhr zurück',acid:'Säure!',mirror:'Gespiegelt!',feather:'Feder: langsamer Stein',stuck:'Klebt!',joker:'Joker ×2',thief:'Zeituhr zurück',sweep:'Blank geputzt!',shatter:'Eis zerspringt!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Die Zeituhr wartet mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Auto-Kipps',lblCombo:'Kombo',
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Kippt das Board nach Zeituhr',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert die Zeituhr ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',legend:'Legende',legMaterials:'Materialien',legMarks:'Markierungen',legPups:'Power-up-Steine',legAnchor:'hält seinen Körper beim Kippen fest',legCrack:'die Zelle bricht beim ersten Kipp ab',anchor:'Anker',crack:'Riss',close:'Schließen',lblPups:'Power-up-Steine',resumeRun:'Letzten Lauf fortsetzen',boom:'Boom!',frozen:'Auto-Kipp 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pupAcid:'Säurestein',pupMirror:'Spiegelstein',pupFeather:'Federstein',pupGlue:'Klebestein',pupJoker:'Jokerstein',pupThief:'Zeitdieb',hintAcid:'löst die Spalte darunter auf',hintMirror:'dreht deinen nächsten Kipp um',hintFeather:'nächster Stein fällt langsam',hintGlue:'klebt einen Kipp lang an der Wand',hintJoker:'seine Reihe zählt doppelt',hintThief:'setzt die Zeituhr zurück',acid:'Säure!',mirror:'Gespiegelt!',feather:'Feder: langsamer Stein',stuck:'Klebt!',joker:'Joker ×2',thief:'Zeituhr zurück',sweep:'Blank geputzt!',shatter:'Eis zerspringt!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Die Zeituhr wartet mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Auto-Kipps',lblCombo:'Kombo',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -361,7 +386,7 @@ const I18N={
       'Reihen, die erst nach dem Kippen voll werden, zählen als Kette: ×3 bei Gelee, dann ×9.',
       'Kippen kostet eine Ladung (die blauen Punkte). Jede volle Reihe füllt eine nach.',
       'Der Balken unter dem Brett läuft voll. Ist er voll, kippt das Brett von selbst. Selber kippen setzt ihn zurück.',
-      'Das war alles. Anker, Risse, Materialien und Power-up-Steine entdeckst du beim Spielen.'],
+      'Das war alles. Anker, Risse, Materialien und Power-up-Steine erklärt die Legende.'],
     tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material'],['Esc / P','Pause']],quakeBar:'Zeit bis zum Auto-Kipp',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
 };
 // Sprüche beim Auflösen, nach Reihenzahl / Kette / Kipp / Ende
@@ -382,7 +407,7 @@ const T=()=>I18N[lang];
 let mode='endless', chIdx=0, challenge=null;
 // Story: 3 Kapitel (je Material) × 10 Level, deterministisch erzeugt, Sterne nach Kipp-Verbrauch
 let storyCh=0, storyLv=0, story=null;
-const STORY_CH=['jelly','stone','metal'];
+const STORY_CH=['jelly','stone','metal','ice'];
 function storyLoad(){ try{ return JSON.parse(localStorage.getItem('kipp-story')||'{}'); }catch(e){ return {}; } }
 const storyStars=(c,l)=>storyLoad()[`${c}-${l}`]||0;
 const storyUnlocked=(c,l)=>l===0?(c===0||storyStars(c-1,9)>0):storyStars(c,l-1)>0;
@@ -430,7 +455,7 @@ const stage=document.getElementById('stage'), ov=document.getElementById('ov');
 const THEMES={
   jelly:{colors:[null,'#FFD23F','#FF5E5B','#4DFFB4','#3FC1FF','#C084FC','#FF9F1C','#FF6FD8','#00E5CC'],board:'#142A21',bg:['#1D3A2C','#0F1F18'],
     crack:1/3,anchorMin:12,anchorRange:7,weld:false,wobble:true,speed:1,chainBase:3,fx:'jelly',
-    name:{en:'Jelly',de:'Gelee'},prop:{en:'Soft: tears twice as often, chains count ×3.',de:'Weich: reißt doppelt so oft, Ketten zählen ×3.'}},
+    name:{en:'Jelly',de:'Gelee'},prop:{en:'Soft: tears twice as often, chains count ×3, long falls bounce back up one cell.',de:'Weich: reißt doppelt so oft, Ketten zählen ×3, lange Stürze federn eine Zelle hoch.'}},
   stone:{colors:[null,'#C9A36A','#B5655A','#8FA88A','#7D93A6','#9A7FA3','#C08A5A','#B58A8A','#78A69C'],board:'#1A1A1D',bg:['#2A2A30','#101013'],
     crack:0,anchorMin:8,anchorRange:5,weld:false,wobble:false,speed:.8,chainBase:2,fx:'dust',
     name:{en:'Stone',de:'Stein'},prop:{en:'Heavy: falls faster, never tears, settles (anchors more often).',de:'Schwer: fällt schneller, reißt nie, setzt sich (öfter Anker).'}},
@@ -491,13 +516,16 @@ function bgTick(t){
     else if(o.k==='shooter'){ o.t-=dt; if(o.t<=0&&!o.on){ o.on=true; o.x=Math.random()*W; o.y=Math.random()*H*.5; o.vx=-500-Math.random()*300; o.vy=200+Math.random()*150; o.life=.7; }
       if(o.on){ o.life-=dt; const nx=o.x+o.vx*dt, ny=o.y+o.vy*dt; bctx.strokeStyle=`rgba(255,255,255,${Math.max(0,o.life)})`; bctx.lineWidth=1.5; bctx.beginPath(); bctx.moveTo(o.x,o.y); bctx.lineTo(nx,ny); bctx.stroke(); o.x=nx; o.y=ny; if(o.life<=0){o.on=false;o.t=4+Math.random()*8;} } }
   }
-  if(!bgReduced) requestAnimationFrame(bgTick);
+  if(!bgReduced&&alive&&!paused&&!document.hidden) requestAnimationFrame(bgTick); else bgRunning=false;
 }
+// Hintergrund läuft nur während des Spiels; Menü, Pause und versteckter Tab zeigen ein Standbild
+let bgRunning=false;
+function bgStart(){ if(bgRunning)return; bgRunning=true; bgLast=performance.now(); requestAnimationFrame(bgTick); }
 bgSize();
 let themeKey='jelly'; try{ themeKey=localStorage.getItem('kipp-theme')||'jelly'; if(!THEMES[themeKey])themeKey='jelly'; }catch(e){}
 let THEME=THEMES[themeKey], COLORS=THEME.colors;
 function applyTheme(){
-  THEME=THEMES[themeKey]; COLORS=THEME.colors; bgReset();
+  THEME=THEMES[themeKey]; COLORS=THEME.colors; bgReset(); if(typeof bgStart==='function') bgStart();
   document.documentElement.style.setProperty('--board',THEME.board);
   document.getElementById('matSw').className='sw-'+themeKey; document.getElementById('matName').textContent=THEME.name[lang];
   document.body.style.background=`radial-gradient(120% 80% at 50% 0%,${THEME.bg[0]} 0%,${THEME.bg[1]} 70%)`;
@@ -537,6 +565,7 @@ const SHAPE_SETS={
   ultra:{list:[...SHAPES_STD.filter(m=>cellsOf(m)>=4),...SHAPES_EXT,...SHAPES_ULTRA],mult:1.6},
 };
 let shapeSet='std'; try{ const v=localStorage.getItem('kipp-shapes'); if(SHAPE_SETS[v]) shapeSet=v; }catch(e){}
+let pups=true; try{ pups=localStorage.getItem('kipp-pups')!=='0'; }catch(e){} // Power-up-Steine an/aus (Tagesbrett immer an)
 let SHAPES=SHAPES_STD, SHAPE_W=SHAPES_STD.map(()=>1);
 // Formen-Set gilt nur für Endlos; große Formen kommen seltener (Gewicht ∝ 1/Blöcke), Standard bleibt gleichverteilt
 function applyShapes(){ const set=mode==='endless'?SHAPE_SETS[shapeSet]:SHAPE_SETS.std; SHAPES=set.list; SHAPE_W=set===SHAPE_SETS.std?SHAPES.map(()=>1):SHAPES.map(m=>4/cellsOf(m)); }
@@ -562,7 +591,7 @@ function makePiece(){
   } else if(MT.crack&&rnd()<MT.crack){
     const cells=[]; m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)cells.push([r,c]); }));
     const [r,c]=cells[Math.floor(rnd()*cells.length)]; f[r][c]|=FLAG_C;
-  } else if(mode!=='tutorial'&&rnd()<PUP_CHANCE){
+  } else if(mode!=='tutorial'&&(pups||daily)&&rnd()<PUP_CHANCE){
     // Power-up: gewichtete Auswahl, Geist für den ganzen Stein, sonst eine Zelle
     const total=PUPS.reduce((a,p)=>a+p[2],0); let k=rnd()*total, fl=PUPS[0][0]; for(const p of PUPS){ k-=p[2]; if(k<0){ fl=p[0]; break; } }
     if(fl===FLAG_G) m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)f[r][c]|=FLAG_G; }));
@@ -614,7 +643,7 @@ function lock(){
   cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0&&(cur.f[r][c]&FLAG_J)){ const cnt={}; grid[cur.y+r].forEach((g,x)=>{ if(g&&x!==cur.x+c) cnt[g]=(cnt[g]||0)+1; }); const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]; if(best) grid[cur.y+r][cur.x+c]=+best; } }));
   if(cur.f.flat().some(v=>v&FLAG_A)) SFX.anchor();
   if(!bgReduced){ const now=performance.now(); cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0) pops.set(`${cur.y+r},${cur.x+c}`,now); })); fxStart(); }
-  cur=null; chain=0; wob.delete('cur'); jiggle(id); tutLocks++;
+  cur=null; chain=0; wob.delete('cur'); jiggle(id); tutLocks++; runSave();
 }
 // Synth-Sounds über WebAudio, kein Asset nötig
 let AC=null, muted=false, master=null, warnTickAt=0;
@@ -687,6 +716,31 @@ const SFX={
   over:()=>{ [0,-3,-7,-12].forEach((st,i)=>tone(330*Math.pow(2,st/12),330*Math.pow(2,st/12)*.98,.35,'triangle',.4,i*.22)); },
 };
 let lastCharges=-1, combo=0, comboAt=0, bestCombo=1, endSnap=null, lastStars=0;
+// Laufenden Endlos-Lauf sichern (beim Landen, bei Pause, beim Verlassen) und im Menü wieder anbieten
+function runSave(){
+  if(!alive||mode!=='endless'||tut)return;
+  try{ localStorage.setItem('kipp-run',JSON.stringify({v:1,N,mult,grid,ids,flags,cur,next,score,lines,level,charges,quakeT,quakeMax,quakeDir,quakeTurns,tipsUsed,quakes,chain,themeKey,mix,shapeSet,speedStep,pieceCount,nextAnchorAt,pieceId,bestCombo,quake,featherPending,curSlow,t:Date.now()})); }catch(e){}
+}
+function runClear(){ try{ localStorage.removeItem('kipp-run'); }catch(e){} renderResume(); }
+function runLoad(){ try{ const r=JSON.parse(localStorage.getItem('kipp-run')||'null'); return r&&r.v===1&&Array.isArray(r.grid)?r:null; }catch(e){ return null; } }
+function renderResume(){ document.getElementById('resumeRunBtn').hidden=!runLoad(); }
+function resumeRun(){
+  const r=runLoad(); if(!r){ runClear(); return; }
+  audio(); mode='endless'; daily=false; story=null; challenge=null; tut=null; document.getElementById('hint').hidden=true;
+  N=r.N; CELL=cv.width/N; mult=r.mult; mix=!!r.mix; if(SHAPE_SETS[r.shapeSet]) shapeSet=r.shapeSet; if(THEMES[r.themeKey]) themeKey=r.themeKey; quake=r.quake!==false;
+  rnd=Math.random; applyShapes(); applyTheme(); renderSizes(); renderThemes(); renderShapes(); renderModes();
+  document.getElementById('quakeBtn').setAttribute('aria-checked',quake); document.getElementById('mixBtn').setAttribute('aria-checked',mix);
+  grid=r.grid; ids=r.ids; flags=r.flags; cur=r.cur; next=r.next; score=r.score; lines=r.lines; level=r.level; charges=r.charges;
+  quakeMax=r.quakeMax||quakeInterval(); quakeT=Math.min(r.quakeT||quakeMax,quakeMax); quakeDir=r.quakeDir||1; quakeTurns=r.quakeTurns||1;
+  tipsUsed=r.tipsUsed||0; quakes=r.quakes||0; chain=r.chain||0; speedStep=r.speedStep||0; speedT0=performance.now()-speedStep*30000; pieceCount=r.pieceCount||0; nextAnchorAt=r.nextAnchorAt||12; pieceId=Math.max(r.pieceId||0,1000); bestCombo=r.bestCombo||1; featherPending=r.featherPending||0; curSlow=!!r.curSlow;
+  popups=[]; pops.clear(); fallCount.clear(); quakeFreezeUntil=0; slideDir=0; toast=null; wob.clear(); particles=[]; shake=0; paused=false; alive=true; busy=false; hsSaved=false; lastCharges=-1;
+  document.getElementById('shareBtn').hidden=true; document.getElementById('endRow').hidden=true; document.getElementById('quakeRow').style.visibility=quake?'':'hidden';
+  document.getElementById('endpanel').hidden=true; document.getElementById('settings').hidden=false; document.getElementById('tutBtn').hidden=false;
+  ov.classList.remove('show'); pov.classList.remove('show'); musicStart(); ghostRun=null; clearInterval(recTimer); rec=null; lastTick=performance.now(); quakeClearWarn(); document.getElementById('quakeFill').style.width='0%';
+  if(!cur) spawn(); restartTimer(); bgStart(); draw();
+}
+document.getElementById('resumeRunBtn').addEventListener('click',resumeRun);
+addEventListener('pagehide',()=>{ if(alive&&!paused) runSave(); });
 // Tempo: in jedem Modus außer Tutorial alle 30 s reine Spielzeit 6 % schneller, unabhängig vom Level
 let speedT0=0, speedStep=0;
 const tempo=()=>mode==='tutorial'?1:Math.pow(.94,speedStep);
@@ -1019,6 +1073,7 @@ setInterval(quakeUpdate,100);
 setInterval(()=>{ if(ghostRun&&daily&&alive&&!busy) draw(); },500);
 function gameOver(){
   if(tut){ tutEnd(); return; }
+  runClear();
   alive=false; clearInterval(timer); softStop(); musicStop(); SFX.over(); cur=null; busy=true;
   endSnap=grid.map(r=>[...r]); recStop();
   toast={text:quip('over'),sub:'',until:performance.now()+1600};
@@ -1176,7 +1231,7 @@ let paused=false, pausedAt=0;
 const pov=document.getElementById('pov');
 function pause(){
   if(!alive||paused)return; paused=true; pausedAt=performance.now();
-  clearInterval(timer); softStop(); musicStop(); quakeClearWarn();
+  clearInterval(timer); softStop(); musicStop(); quakeClearWarn(); runSave();
   document.getElementById('pScore').textContent=score; document.getElementById('pLines').textContent=lines; document.getElementById('pLevel').textContent=level;
   pov.classList.add('show'); document.getElementById('resumeBtn').focus();
 }
@@ -1184,10 +1239,10 @@ function resume(){
   if(!paused)return; paused=false; pov.classList.remove('show');
   if(daily) runStart+=performance.now()-pausedAt; // Ghost-Replay läuft nicht weiter, solange pausiert
   speedT0+=performance.now()-pausedAt; if(quakeFreezeUntil>pausedAt) quakeFreezeUntil+=performance.now()-pausedAt;
-  lastTick=performance.now(); musicStart(); restartTimer(); draw();
+  lastTick=performance.now(); musicStart(); restartTimer(); bgStart(); draw();
 }
 function quitToMenu(){
-  paused=false; pov.classList.remove('show');
+  paused=false; pov.classList.remove('show'); runClear();
   if(tut){ tutEnd(); return; }
   alive=false; clearInterval(timer); softStop(); musicStop(); cur=null; busy=false; toast=null;
   clearInterval(recTimer); recTimer=null; rec=null; ghostRun=null; // abgebrochener Lauf zählt nicht
@@ -1198,15 +1253,36 @@ function quitToMenu(){
 }
 document.getElementById('pauseBtn').addEventListener('click',()=>{ audio(); pause(); });
 document.getElementById('matChip').addEventListener('click',()=>{ audio(); cycleTheme(); });
+// Legende: Materialien, Markierungen und alle Power-up-Steine mit gezeichnetem Symbol
+const lov=document.getElementById('lov'), lovOpen=()=>lov.classList.contains('show');
+function renderLegend(){
+  const t=T(), rows=[], paint=[];
+  const row=(name,text,fn)=>{ rows.push(`<div class="row"><canvas width="60" height="60" data-i="${paint.length}"></canvas><span><b>${name}</b> · ${text}</span></div>`); paint.push(fn); };
+  rows.push(`<h3>${t.legMaterials}</h3>`);
+  for(const k of Object.keys(THEMES)) row(THEMES[k].name[lang],THEMES[k].prop[lang],g=>paintBlock(g,6,6,48,THEMES[k].colors[1+Object.keys(THEMES).indexOf(k)],THEMES[k].fx,1));
+  rows.push(`<h3>${t.legMarks}</h3>`);
+  row(t.anchor,t.legAnchor,g=>{ paintBlock(g,6,6,48,COLORS[3],THEME.fx,1); markOn(g,30,30,54,FLAG_A); });
+  row(t.crack,t.legCrack,g=>{ paintBlock(g,6,6,48,COLORS[3],THEME.fx,1); markOn(g,30,30,54,FLAG_C); });
+  rows.push(`<h3>${t.legPups}</h3>`);
+  for(const [fl,key] of PUPS) row(t['pup'+key],t['hint'+key],g=>{ if(fl===FLAG_G){ g.globalAlpha=.45; paintBlock(g,6,6,48,COLORS[4],THEME.fx,1); g.globalAlpha=1; g.strokeStyle=COLORS[4]; g.lineWidth=2; g.setLineDash([5,4]); g.strokeRect(8,8,44,44); } else { paintBlock(g,6,6,48,COLORS[4],THEME.fx,1); markOn(g,30,30,54,fl); } });
+  document.getElementById('lovTitle').textContent=t.legend; document.getElementById('lovClose').textContent=t.close;
+  const el=document.getElementById('legendList'); el.innerHTML=rows.join('');
+  el.querySelectorAll('canvas').forEach(c=>paint[+c.dataset.i](c.getContext('2d')));
+}
+function openLegend(){ audio(); renderLegend(); lov.classList.add('show'); lov.scrollTop=0; document.getElementById('lovClose').focus(); }
+document.getElementById('legendBtn').addEventListener('click',openLegend);
+document.getElementById('pLegendBtn').addEventListener('click',openLegend);
+document.getElementById('lovClose').addEventListener('click',()=>lov.classList.remove('show'));
 document.getElementById('resumeBtn').addEventListener('click',()=>{ audio(); resume(); });
 document.getElementById('quitBtn').addEventListener('click',quitToMenu);
-document.addEventListener('visibilitychange',()=>{ if(document.hidden) pause(); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) pause(); else if(alive&&!paused) bgStart(); });
 addEventListener('keydown',e=>{
+  if(lovOpen()){ if(e.key==='Escape'){ e.preventDefault(); lov.classList.remove('show'); } return; }
   if(e.key!=='Escape'&&e.key!=='p'&&e.key!=='P')return;
   if(paused){ e.preventDefault(); resume(); } else if(alive){ e.preventDefault(); pause(); }
 });
 function start(){
-  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0; quakeFreezeUntil=0; fallCount.clear(); featherPending=0; curSlow=false; slideDir=0;
+  audio(); runClear(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0; quakeFreezeUntil=0; fallCount.clear(); featherPending=0; curSlow=false; slideDir=0;
   if(mode!=='tutorial'){ tut=null; document.getElementById('hint').hidden=true; }
   daily=mode==='daily'; story=mode==='story'?storyLevel(storyCh,storyLv):null; challenge=mode==='challenge'?CHALLENGES[chIdx]:story; if(mode!=='endless') mix=false;
   if(story){ themeKey=story.theme; }
@@ -1224,7 +1300,7 @@ function start(){
   }
   document.getElementById('shareBtn').hidden=true; document.getElementById('endRow').hidden=true; document.getElementById('quakeRow').style.visibility='';
   document.getElementById('endpanel').hidden=true; document.getElementById('settings').hidden=false; document.getElementById('tutBtn').hidden=false;
-  ov.classList.remove('show'); musicStart(); if(daily) recStart(); else { ghostRun=null; clearInterval(recTimer); rec=null; } quakeReset(); lastTick=performance.now(); quakeClearWarn(); document.getElementById('quakeFill').style.width='0%'; spawn(); restartTimer(); draw();
+  ov.classList.remove('show'); musicStart(); if(daily) recStart(); else { ghostRun=null; clearInterval(recTimer); rec=null; } quakeReset(); lastTick=performance.now(); quakeClearWarn(); document.getElementById('quakeFill').style.width='0%'; spawn(); restartTimer(); bgStart(); draw();
 }
 
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
@@ -1447,7 +1523,7 @@ function renderModes(){
   sizesEl.classList.toggle('locked',mode==='daily'); document.getElementById('boardSec').hidden=mode!=='endless';
   document.getElementById('dailyNote').hidden=mode!=='daily';
   chEl.hidden=mode!=='challenge';
-  document.getElementById('storyBox').hidden=mode!=='story'; document.getElementById('matSec').hidden=mode==='story';
+  document.getElementById('storyBox').hidden=mode!=='story'; document.getElementById('matSec').hidden=mode==='story'; document.getElementById('pupToggle').hidden=mode==='daily';
   if(mode==='story'){
     document.getElementById('chapters').innerHTML=STORY_CH.map((k,i)=>`<button role="radio" aria-checked="${storyCh===i}" data-ch="${i}" ${storyUnlocked(i,0)?'':'disabled'}><i class="sw-${k}"></i>${THEMES[k].name[lang]}</button>`).join('');
     const lv=storyLevel(storyCh,storyLv); document.getElementById('storyNote').textContent=`${lv.desc[lang]} ${lv.quakeMs?(lang==='de'?'Auto-Kipp alle '+lv.quakeMs/1000+' s.':'Auto-tip every '+lv.quakeMs/1000+' s.'):''} ${lv.N}×${lv.N}.`;
@@ -1468,6 +1544,8 @@ function applyLang(){
   document.getElementById('povKicker').textContent=t.pauseKicker; document.getElementById('povHint').textContent=t.pauseHint;
   for(const [id,k] of [['lblScore','lblScore'],['lblRows','lblRows'],['lblLevel','lblLevel'],['lblNext','lblNext'],['lblCharge','lblCharge'],['pLblScore','lblScore'],['pLblRows','lblRows'],['pLblLevel','lblLevel'],['tlRows','lblRows'],['tlTips','lblTips'],['tlQuakes','lblQuakes'],['tlCombo','lblCombo'],['iniLbl','enter']]) document.getElementById(id).textContent=t[k];
   document.getElementById('matChip').setAttribute('aria-label',t.theme); document.getElementById('matName').textContent=THEME.name[lang];
+  document.getElementById('legendBtn').textContent=t.legend; document.getElementById('pLegendBtn').textContent=t.legend; document.getElementById('lblPups').textContent=t.lblPups; document.getElementById('pupsBtn').setAttribute('aria-checked',pups); document.getElementById('resumeRunBtn').textContent=t.resumeRun;
+  if(lovOpen()) renderLegend();
   document.querySelector('#hsTabs [data-s="local"]').textContent=t.hsLocal; document.querySelector('#hsTabs [data-s="world"]').textContent=t.hsWorld;
   document.getElementById('keys').innerHTML=t.keys.map(([k,l])=>`<div><span>${l}</span><kbd>${k}</kbd></div>`).join('');
   document.getElementById('dailyNote').textContent=t.dailyNote; document.getElementById('shareBtn').textContent=t.share;
@@ -1493,6 +1571,7 @@ function posLoad(){
 posLoad();
 applyLang();
 document.getElementById('mixBtn').addEventListener('click',()=>{ mix=!mix; document.getElementById('mixBtn').setAttribute('aria-checked',mix); });
+document.getElementById('pupsBtn').addEventListener('click',()=>{ pups=!pups; try{localStorage.setItem('kipp-pups',pups?'1':'0');}catch(e){} document.getElementById('pupsBtn').setAttribute('aria-checked',pups); });
 const quakeBtn=document.getElementById('quakeBtn');
 quakeBtn.addEventListener('click',()=>{ quake=!quake; document.getElementById('quakeRow').style.visibility=quake?'':'hidden'; quakeBtn.setAttribute('aria-checked',quake); });
 // Ergebniskarte als PNG: Brett-Miniatur, Material, Modus, Punkte
@@ -1553,7 +1632,7 @@ cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',en
 addEventListener('keydown',e=>{
   const k={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'rot',ArrowDown:'soft',' ':'drop',q:'tipL',e:'tipR',Q:'tipL',E:'tipR'}[e.key];
   if(!k)return; e.preventDefault();
-  if(paused)return;
+  if(paused||lovOpen())return;
   if(!alive){ if(k==='drop'&&(document.getElementById('initials').hidden||hsSaved))start(); return; }
   k==='soft'? step() : actions[k]();
   if(e.key==='t'||e.key==='T') cycleTheme();
@@ -1561,7 +1640,9 @@ addEventListener('keydown',e=>{
 // Canvas-Auflösung folgt der Anzeigegröße (bis 2× Pixeldichte), damit große Bretter scharf bleiben
 function fitCanvas(){ const w=cv.getBoundingClientRect().width||440; const px=Math.max(320,Math.min(1600,Math.round(w*Math.min(2,devicePixelRatio||1)))); if(px!==cv.width){ cv.width=cv.height=px; CELL=cv.width/N; if(grid) draw(); } }
 let fitTimer=null; addEventListener('resize',()=>{ clearTimeout(fitTimer); fitTimer=setTimeout(fitCanvas,80); });
-applyTheme(); grid=empty(); ids=empty(); flags=empty(); fitCanvas(); draw(); requestAnimationFrame(bgTick);
+applyTheme(); grid=empty(); ids=empty(); flags=empty(); fitCanvas(); draw(); bgStart(); renderResume();
+// Installierbar und offline spielbar: Service Worker nur über http(s), nicht bei file://
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')) addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 </script>
 </body>
 </html>
