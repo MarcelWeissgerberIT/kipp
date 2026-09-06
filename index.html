@@ -14,6 +14,8 @@
     --ochre-hi:#E8B54F; --ochre-base:#9A6E22; --on-ochre:#1F3A2E; --danger:#FF5E5B; --danger-soft:#FF9A98; --mint:#4DFFB4;
     --ov-72:rgba(10,14,13,.72); --ov-86:rgba(10,14,13,.86); --glass:rgba(237,232,220,.06); --line:rgba(237,232,220,.18);
   }
+  /* Brettbreite: auf dem Handy 92vw, auf großen Bildschirmen so viel wie Höhe und Breite hergeben */
+  :root{--arena:min(92vw,max(280px,100vh - 380px))}
   *{box-sizing:border-box;margin:0;padding:0}
   [hidden]{display:none !important}
   #bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
@@ -25,15 +27,15 @@
   @media (prefers-reduced-motion:reduce){.world{transition:none}}
   .keys{display:none}
   @media (min-width:960px){
-    .world{display:grid;grid-template-columns:200px 440px 200px;grid-template-areas:'head head head' 'keys arena pad' 'keys bar pad' 'keys charges pad';column-gap:28px;row-gap:10px;align-items:center;justify-items:center}
-    header{grid-area:head;width:440px} .arena{grid-area:arena} .charges{grid-area:charges} .dpad{grid-area:pad;transform:scale(.9)}
+    .world{--arena:clamp(360px,min(100vw - 540px,100vh - 210px),820px);display:grid;grid-template-columns:200px var(--arena) 200px;grid-template-areas:'head head head' 'keys arena pad' 'keys bar pad' 'keys charges pad';column-gap:28px;row-gap:10px;align-items:center;justify-items:center}
+    header{grid-area:head;width:var(--arena)} .arena{grid-area:arena} .charges{grid-area:charges} .dpad{grid-area:pad;transform:scale(.9)}
     .keys{display:flex;grid-area:keys;flex-direction:column;gap:8px;font-size:.85rem;font-weight:700;color:var(--dim);width:200px}
     .keys div{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .keys kbd{font:inherit;font-size:.75rem;background:rgba(237,232,220,.1);border:1px solid rgba(237,232,220,.25);border-bottom-width:3px;border-radius:6px;padding:2px 8px;color:var(--chalk);white-space:nowrap}
   }
   html,body{height:100%;background:radial-gradient(120% 80% at 50% 0%,#1D3A2C 0%,#0F1F18 70%);color:var(--chalk);font-family:Nunito,system-ui,sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
   body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px}
-  header{width:min(92vw,440px);display:flex;justify-content:space-between;align-items:flex-end;gap:10px;padding:0 2px}
+  header{width:var(--arena);display:flex;justify-content:space-between;align-items:flex-end;gap:10px;padding:0 2px}
   h1{font-family:Bungee,Nunito,sans-serif;font-size:2.1rem;letter-spacing:.04em;line-height:1;text-shadow:0 2px 0 rgba(0,0,0,.5),0 0 24px rgba(217,164,65,.18)}
   .lbl,.stats small,.pstats small,.tiles small,.nextbox small,.kicker,.inilbl{font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
   .stats{display:flex;gap:14px;align-items:flex-end}
@@ -48,6 +50,10 @@
   .chip{height:32px;padding:0 10px 0 6px;border-radius:16px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1.5px rgba(237,232,220,.14);color:var(--chalk);font-size:.72rem;letter-spacing:.04em;gap:6px;border:0}
   .chip i{display:block;width:16px;height:16px;flex:none}
   .chip:active{transform:none;box-shadow:inset 0 0 0 1.5px rgba(237,232,220,.35)}
+  @media (min-width:1500px) and (min-height:900px){
+    .dpad{transform:scale(1.15)} .keys{font-size:1rem;gap:10px} .keys kbd{font-size:.85rem} h1{font-size:2.5rem} .stats b{font-size:1.9rem} .stats small{font-size:.66rem}
+    .nextbox{width:64px;height:64px;padding:8px} .nextbox canvas{width:48px;height:48px} .chip{height:36px;font-size:.8rem} .charges .lbl{font-size:.7rem} .bat i{width:14px;height:14px}
+  }
   @media (max-width:440px){
     header{gap:6px;padding:0} h1{font-size:1.5rem} .stats{gap:6px} .stats b{font-size:1.2rem} .stats small{font-size:.5rem;letter-spacing:.1em}
     .chip{display:none} .tools{gap:4px} .mute{width:32px;height:32px} .nextbox{width:48px;height:48px;padding:6px} .nextbox canvas{width:36px;height:36px} .nextbox small{top:-13px}
@@ -79,7 +85,7 @@
   .mute .x{display:none}
   .mute[aria-pressed="true"] .w{display:none}
   .mute[aria-pressed="true"] .x{display:block}
-  .arena{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:8px;width:min(92vw,440px);align-items:stretch}
+  .arena{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:8px;width:var(--arena);align-items:stretch}
   .arena .stage{grid-column:1;grid-row:1}
   .arena .tip{height:auto;border-radius:14px}
   .arena .tip svg.sym{width:40px;height:60px;stroke-width:2}
@@ -131,12 +137,13 @@
   .seg button small{font-size:.64rem;opacity:.75;font-weight:700;white-space:nowrap}
   .seg button[aria-checked="true"]{background:rgba(237,232,220,.14);color:var(--chalk);box-shadow:inset 0 0 0 1px rgba(237,232,220,.18)}
   .seg.shapes{grid-template-columns:repeat(3,1fr)} .settings h3.sub{margin-top:2px}
-  .seg.themes{grid-template-columns:repeat(3,1fr)} .seg.modes{grid-template-columns:repeat(3,1fr)} .seg.sizes{grid-template-columns:repeat(4,1fr)}
+  .seg.themes{grid-template-columns:repeat(4,1fr)} .seg.themes button{font-size:.78rem;gap:5px;padding:6px 2px} .seg.modes{grid-template-columns:repeat(3,1fr)} .seg.sizes{grid-template-columns:repeat(4,1fr)}
   .seg.themes button,.seg.chapters button{flex-direction:row;gap:8px}
   .seg.chapters i{display:block;width:14px;height:14px;flex:none}
   .seg.themes i{display:block;width:18px;height:18px;flex:none}
   .sw-jelly{border-radius:6px;background:radial-gradient(circle at 50% 30%,#fff 0,rgba(255,255,255,0) 40%),#FF6FD8;box-shadow:0 0 8px #FF6FD8}
   .sw-stone{border-radius:2px;background:linear-gradient(135deg,rgba(255,255,255,.35),rgba(0,0,0,.35)),#C9A36A}
+  .sw-ice{border-radius:3px;background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,0) 45%),#7FE3FF;box-shadow:0 0 6px rgba(127,227,255,.6)}
   .sw-metal{border-radius:3px;background:linear-gradient(135deg,#fff 0,#7FB8F0 18%,#213 50%,#7FB8F0 52%,#000 100%)}
   .sizes.locked{opacity:.4;pointer-events:none}
   .toggles{display:flex;flex-direction:column;gap:6px}
@@ -302,12 +309,13 @@
 <script>
 let N=12, CELL=40, mult=1.5;
 let quake=true, quakeT=0, quakeDir=0, quakeTurns=1, quakeMax=0, lastTick=0; // Beben: selbstständiges Kippen
-const FLAG_A=1, FLAG_C=2; // Anker, Riss; Bits 4+8 = Material je Zelle (0 = Thema, 1 Gelee, 2 Stein, 3 Metall)
-const MATS=['','jelly','stone','metal'], matOf=fl=>(fl>>2)&3;
-// Power-up-Zellen (Bits 16+): Sprengstein, Magnet, Frost, Doppel-Ladung; Geist gilt für den ganzen Stein
-const FLAG_B=16, FLAG_M=32, FLAG_F=64, FLAG_D=128, FLAG_G=256, PUP_MASK=FLAG_B|FLAG_M|FLAG_F|FLAG_D|FLAG_G;
-const PUPS=[[FLAG_B,'Bomb',3],[FLAG_M,'Magnet',2],[FLAG_F,'Frost',2],[FLAG_D,'Charge',3],[FLAG_G,'Ghost',2]]; // Flag, i18n-Schlüssel, Gewicht
-const PUP_CHANCE=.14; const seenPup=new Set();
+const FLAG_A=1, FLAG_C=2; // Anker, Riss; Bits 4+8+16 = Material je Zelle (0 = Thema, 1 Gelee, 2 Stein, 3 Metall, 4 Eis)
+const MATS=['','jelly','stone','metal','ice'], matOf=fl=>(fl>>2)&7;
+// Power-up-Zellen (Bits 32+): Sprengstein, Magnet, Frost, Doppel-Ladung, Geist (ganzer Stein), Säure, Spiegel, Feder, Kleber, Joker, Zeitdieb
+const FLAG_B=32, FLAG_M=64, FLAG_F=128, FLAG_D=256, FLAG_G=512, FLAG_X=1024, FLAG_R=2048, FLAG_H=4096, FLAG_K=8192, FLAG_K1=16384, FLAG_J=32768, FLAG_T=65536;
+const PUP_MASK=FLAG_B|FLAG_M|FLAG_F|FLAG_D|FLAG_G|FLAG_X|FLAG_R|FLAG_H|FLAG_K|FLAG_J|FLAG_T;
+const PUPS=[[FLAG_B,'Bomb',3],[FLAG_M,'Magnet',2],[FLAG_F,'Frost',2],[FLAG_D,'Charge',3],[FLAG_G,'Ghost',2],[FLAG_X,'Acid',2],[FLAG_R,'Mirror',1],[FLAG_H,'Feather',2],[FLAG_K,'Glue',1],[FLAG_J,'Joker',2],[FLAG_T,'Thief',2]]; // Flag, i18n-Schlüssel, Gewicht
+const PUP_CHANCE=.16; const seenPup=new Set();
 let mix=false;
 let flags, pieceCount=0, nextAnchorAt=0, chain=0, tipsUsed=0, quakes=0, toast=null;
 let daily=false, rnd=Math.random;
@@ -324,7 +332,7 @@ const I18N={
     overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} auto-tips survived.`,
     winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} auto-tips. Try it with fewer tips?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} auto-tips`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Kipps the board after timeout',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the auto-tip timer',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Auto-tip frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. The auto-tip timer waits with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Auto-tips',lblCombo:'Combo',
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Kipps the board after timeout',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the auto-tip timer',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Auto-tip frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pupAcid:'Acid piece',pupMirror:'Mirror piece',pupFeather:'Feather piece',pupGlue:'Glue piece',pupJoker:'Joker piece',pupThief:'Time thief',hintAcid:'dissolves the column below',hintMirror:'flips your next tip',hintFeather:'next piece falls slowly',hintGlue:'sticks to the wall for one tip',hintJoker:'its row counts double',hintThief:'resets the timer',acid:'Acid!',mirror:'Mirrored!',feather:'Feather: slow piece',stuck:'Stuck!',joker:'Joker ×2',thief:'Timer reset',sweep:'Clean sweep!',shatter:'Ice shatters!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. The auto-tip timer waits with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Auto-tips',lblCombo:'Combo',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -343,7 +351,7 @@ const I18N={
     overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Auto-Kipps überstanden.`,
     winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Auto-Kipps. Schaffst du es mit weniger Kipps?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Auto-Kipps`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Kippt das Board nach Zeituhr',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert die Zeituhr ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Auto-Kipp 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Die Zeituhr wartet mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Auto-Kipps',lblCombo:'Kombo',
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Kippt das Board nach Zeituhr',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert die Zeituhr ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Auto-Kipp 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pupAcid:'Säurestein',pupMirror:'Spiegelstein',pupFeather:'Federstein',pupGlue:'Klebestein',pupJoker:'Jokerstein',pupThief:'Zeitdieb',hintAcid:'löst die Spalte darunter auf',hintMirror:'dreht deinen nächsten Kipp um',hintFeather:'nächster Stein fällt langsam',hintGlue:'klebt einen Kipp lang an der Wand',hintJoker:'seine Reihe zählt doppelt',hintThief:'setzt die Zeituhr zurück',acid:'Säure!',mirror:'Gespiegelt!',feather:'Feder: langsamer Stein',stuck:'Klebt!',joker:'Joker ×2',thief:'Zeituhr zurück',sweep:'Blank geputzt!',shatter:'Eis zerspringt!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Die Zeituhr wartet mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Auto-Kipps',lblCombo:'Kombo',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -429,6 +437,9 @@ const THEMES={
   metal:{colors:[null,'#E8C25A','#D9735A','#8FD9C0','#7FB8F0','#B9A0E8','#E39A4A','#D98AB0','#7FD0D8'],board:'#12171C',bg:['#233040','#0C1014'],
     crack:1/6,anchorMin:14,anchorRange:7,weld:true,wobble:false,speed:1,chainBase:2,fx:'sparks',
     name:{en:'Metal',de:'Metall'},prop:{en:'Magnetic: touching bodies weld together when the board tips.',de:'Magnetisch: Beim Kippen verschweißen sich berührende Körper.'}},
+  ice:{colors:[null,'#7FE3FF','#4DB8FF','#B1F0FF','#8FA9FF','#5AD1C8','#DDF3FF','#6C8CFF','#9EEFE0'],board:'#0F1E2B',bg:['#1B3A4F','#0A141C'],
+    crack:1/8,anchorMin:14,anchorRange:7,weld:false,wobble:false,speed:.95,chainBase:2,fx:'ice',
+    name:{en:'Ice',de:'Eis'},prop:{en:'Slippery: bodies slide with the tip, shatter on auto-tips, a clean sweep pays big.',de:'Glatt: Körper rutschen beim Kippen mit, zerspringen beim Auto-Kipp, Vollräumung zahlt groß.'}},
 };
 // Lebendiger Hintergrund je Material: Unterwasser (Gelee), Höhlenstaub (Stein), Weltall (Metall)
 const bg=document.getElementById('bg'), bctx=bg.getContext('2d');
@@ -438,7 +449,7 @@ addEventListener('resize',()=>{ bgSize(); bgReset(); });
 function bgReset(){
   bgKind=THEMES[themeKey].fx; bgItems=[]; const W=innerWidth,H=innerHeight, R=Math.random;
   // 60 Staubpartikel je Material, driften 40px auf und ab
-  const driftCol=bgKind==='jelly'?'rgba(200,240,255,.35)':bgKind==='dust'?'rgba(214,190,150,.4)':'rgba(230,240,255,.7)';
+  const driftCol=bgKind==='jelly'?'rgba(200,240,255,.35)':bgKind==='dust'?'rgba(214,190,150,.4)':bgKind==='ice'?'rgba(210,240,255,.55)':'rgba(230,240,255,.7)';
   for(let i=0;i<60;i++) bgItems.push({k:'drift',x:R()*W,y:R()*H,r:.6+R()*2.2,a:.2+R()*.5,d:14+R()*26,ph:R()*2,col:driftCol});
   if(bgKind==='jelly'){ // Blasen, Lichtstrahlen, weiche Quallen-Blobs
     for(let i=0;i<34;i++) bgItems.push({k:'bubble',x:R()*W,y:R()*H,r:1.5+R()*4,v:8+R()*18,w:R()*6.28});
@@ -446,6 +457,9 @@ function bgReset(){
     for(let i=0;i<4;i++) bgItems.push({k:'blob',x:R()*W,y:R()*H,r:40+R()*60,v:3+R()*5,ph:R()*6.28,col:['#FF6FD8','#4DFFB4','#3FC1FF','#C084FC'][i]});
   } else if(bgKind==='dust'){ // schwebende Staubkörner, träge, leicht warm
     for(let i=0;i<70;i++) bgItems.push({k:'mote',x:R()*W,y:R()*H,r:.6+R()*1.8,vx:(R()-.5)*6,vy:(R()-.5)*4,a:.15+R()*.35,ph:R()*6.28});
+  } else if(bgKind==='ice'){ // Schneeflocken und ein Polarlicht oben
+    for(let i=0;i<50;i++) bgItems.push({k:'flake',x:R()*W,y:R()*H,r:1+R()*2.2,v:12+R()*22,w:R()*6.28});
+    for(let i=0;i<3;i++) bgItems.push({k:'aurora',x:R()*W,w:200+R()*300,a:.05+R()*.05,ph:R()*6.28,col:['#7FE3FF','#9EEFE0','#8FA9FF'][i]});
   } else { // Sterne mit Parallaxe, Nebel, Sternschnuppen
     for(let i=0;i<110;i++) bgItems.push({k:'star',x:R()*W,y:R()*H,r:.4+R()*1.4,tw:R()*6.28,v:1+R()*3});
     for(let i=0;i<3;i++) bgItems.push({k:'nebula',x:R()*W,y:R()*H,r:120+R()*160,col:['#7FB8F0','#B9A0E8','#D98AB0'][i],ph:R()*6.28});
@@ -459,6 +473,8 @@ function bgTick(t){
   for(const o of bgItems){
     if(dx&&o.x!==undefined){ o.x+=dx; if(o.x<-200)o.x+=W+400; if(o.x>W+200)o.x-=W+400; }
     if(o.k==='drift'){ const ph=(time/o.d+o.ph)%2, off=(ph<1?ph:2-ph)*-40; bctx.globalAlpha=o.a; bctx.fillStyle=o.col; bctx.beginPath(); bctx.arc(o.x,o.y+off,o.r,0,6.28); bctx.fill(); bctx.globalAlpha=1; }
+    else if(o.k==='flake'){ o.y+=o.v*dt; o.w+=dt*1.5; if(o.y>H+10){o.y=-10;o.x=Math.random()*W;} const x=o.x+Math.sin(o.w)*8; bctx.fillStyle='rgba(235,248,255,.8)'; bctx.beginPath(); bctx.arc(x,o.y,o.r,0,6.28); bctx.fill(); }
+    else if(o.k==='aurora'){ const a=o.a*(0.6+0.4*Math.sin(time*.3+o.ph)), x=o.x+Math.sin(time*.15+o.ph)*60; const g=bctx.createLinearGradient(0,0,0,H*.55); g.addColorStop(0,o.col+'00'); g.addColorStop(.35,o.col+Math.round(a*255).toString(16).padStart(2,'0')); g.addColorStop(1,o.col+'00'); bctx.fillStyle=g; bctx.beginPath(); bctx.moveTo(x,0); bctx.lineTo(x+o.w,0); bctx.lineTo(x+o.w*.7+80,H*.55); bctx.lineTo(x-40,H*.55); bctx.closePath(); bctx.fill(); }
     else if(o.k==='blob'){ o.y-=o.v*dt; if(o.y<-o.r)o.y=H+o.r; const px=o.x+Math.sin(time*.4+o.ph)*30, sq=1+Math.sin(time*1.3+o.ph)*.12;
       const g=bctx.createRadialGradient(px,o.y,0,px,o.y,o.r); g.addColorStop(0,o.col+'33'); g.addColorStop(1,o.col+'00');
       bctx.save(); bctx.translate(px,o.y); bctx.scale(sq,1/sq); bctx.translate(-px,-o.y); bctx.fillStyle=g; bctx.beginPath(); bctx.arc(px,o.y,o.r,0,6.28); bctx.fill(); bctx.restore(); }
@@ -538,7 +554,7 @@ function makePiece(){
   const f=m.map(r=>r.map(()=>0));
   pieceCount++;
   // Mix: jeder Stein bekommt sein eigenes Material und dessen Regeln
-  const mat=mix?1+Math.floor(rnd()*3):0, MT=mat?THEMES[MATS[mat]]:THEME;
+  const mat=mix?1+Math.floor(rnd()*4):0, MT=mat?THEMES[MATS[mat]]:THEME;
   if(mat) m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)f[r][c]|=mat<<2; }));
   if(pieceCount>=nextAnchorAt||(mat===2&&rnd()<.18)){
     m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)f[r][c]|=FLAG_A; }));
@@ -558,6 +574,7 @@ function spawn(){
   if(next===null)next=makePiece();
   const p=next; next=makePiece();
   cur={m:SHAPES[p.i].map(r=>[...r]),f:p.f,col:(p.i%8)+1,x:Math.floor((N-SHAPES[p.i][0].length)/2),y:0,ghost:p.f.flat().some(v=>v&FLAG_G)};
+  curSlow=featherPending>0; if(curSlow){ featherPending--; toast={text:T().feather,sub:'',until:performance.now()+1000}; } if(alive) restartTimer();
   const pf=p.f.flat().reduce((a,v)=>a|v,0)&PUP_MASK;
   if(pf&&!toast){ const pu=PUPS.find(q=>pf&q[0]); if(pu&&!seenPup.has(pu[1])){ seenPup.add(pu[1]); toast={text:T()['pup'+pu[1]],sub:T()['hint'+pu[1]],until:performance.now()+1600}; } }
   if(cur.ghost?ghostTarget(cur.m,cur.x)<0:hits(cur.m,cur.x,cur.y)) gameOver();
@@ -589,6 +606,12 @@ function hits(m,x,y){
 function lock(){
   const id=pieceId++;
   cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0){ grid[cur.y+r][cur.x+c]=cur.col; ids[cur.y+r][cur.x+c]=id; flags[cur.y+r][cur.x+c]=cur.f[r][c]&~FLAG_G; } }));
+  // Kleber: klebt beim Landen an einer Seitenwand fest (wirkt wie ein Anker, bis der zweite Kipp ihn löst)
+  if(cur.f.flat().some(v=>v&FLAG_K)){ const wall=cur.m.some((row,r)=>row.some((v,c)=>v&&(cur.x+c===0||cur.x+c===N-1)));
+    cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0){ if(wall) flags[cur.y+r][cur.x+c]|=FLAG_A|FLAG_K; else flags[cur.y+r][cur.x+c]&=~FLAG_K; } }));
+    if(wall){ SFX.anchor(); toast={text:T().stuck,sub:'',until:performance.now()+900}; } }
+  // Joker: nimmt die häufigste Farbe seiner Reihe an
+  cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0&&(cur.f[r][c]&FLAG_J)){ const cnt={}; grid[cur.y+r].forEach((g,x)=>{ if(g&&x!==cur.x+c) cnt[g]=(cnt[g]||0)+1; }); const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]; if(best) grid[cur.y+r][cur.x+c]=+best; } }));
   if(cur.f.flat().some(v=>v&FLAG_A)) SFX.anchor();
   if(!bgReduced){ const now=performance.now(); cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0) pops.set(`${cur.y+r},${cur.x+c}`,now); })); fxStart(); }
   cur=null; chain=0; wob.delete('cur'); jiggle(id); tutLocks++;
@@ -613,6 +636,7 @@ let mGain=null, mFilter=null, mTimer=null, mStep=0, mNext=0, mLayerUntil=0;
 const MUSIC={
   jelly:{bpm:104,bass:[0,0,7,0,5,0,7,0,0,0,7,0,3,0,5,0],lead:[12,null,16,19,null,16,null,12,null,14,null,17,19,null,16,null],type:'triangle',ltype:'sine',root:110},
   stone:{bpm:80,bass:[0,null,null,0,null,null,0,null,-2,null,null,-2,null,null,-4,null],lead:[null,null,7,null,null,null,5,null,null,null,3,null,null,null,null,null],type:'sawtooth',ltype:'triangle',root:82.4},
+  ice:{bpm:96,bass:[0,null,7,null,5,null,7,null,0,null,7,null,3,null,5,null],lead:[19,null,null,16,null,14,null,null,12,null,null,16,null,19,null,null],type:'sine',ltype:'triangle',root:130.8},
   metal:{bpm:118,bass:[0,0,0,3,0,0,5,0,0,0,0,3,7,0,5,0],lead:[12,null,15,null,19,15,null,12,null,null,17,null,19,null,22,null],type:'square',ltype:'square',root:98},
 };
 function mNote(f,dur,type,vol,t){ if(muted)return; const o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.connect(g); g.connect(mFilter); o.start(t); o.stop(t+dur+.02); }
@@ -642,11 +666,11 @@ const buzz=p=>{ try{ if(navigator.vibrate&&!muted) navigator.vibrate(p); }catch(
 const SFX={
   move:()=>tone(520,480,.04,'square',.12),
   rot:()=>tone(660,880,.06,'triangle',.2),
-  drop:()=>{ buzz(14); if(THEME.fx==='sparks'){ tone(1800,900,.18,'square',.25); tone(2700,2650,.25,'sine',.15); noise(.05,.3,6000); } else if(THEME.fx==='dust'){ noise(.2,.6,300); tone(90,30,.25,'sine',.7); } else { noise(.12,.35,600); tone(180,60,.12,'sine',.5); } },
-  lock:()=>{ buzz(8); if(THEME.fx==='sparks') tone(1400,1300,.12,'square',.15); else if(THEME.fx==='dust') noise(.1,.4,400); else tone(240,120,.08,'triangle',.3); },
+  drop:()=>{ buzz(14); if(THEME.fx==='sparks'){ tone(1800,900,.18,'square',.25); tone(2700,2650,.25,'sine',.15); noise(.05,.3,6000); } else if(THEME.fx==='ice'){ tone(2200,1400,.1,'sine',.25); noise(.05,.25,7000); } else if(THEME.fx==='dust'){ noise(.2,.6,300); tone(90,30,.25,'sine',.7); } else { noise(.12,.35,600); tone(180,60,.12,'sine',.5); } },
+  lock:()=>{ buzz(8); if(THEME.fx==='sparks') tone(1400,1300,.12,'square',.15); else if(THEME.fx==='ice') tone(1600,1900,.06,'sine',.2); else if(THEME.fx==='dust') noise(.1,.4,400); else tone(240,120,.08,'triangle',.3); },
   clear:n=>{ buzz(n>=3?[30,40,50]:30); [0,4,7,12,16][Math.min(n,4)]; for(let i=0;i<n+2;i++) tone(440*Math.pow(2,[0,4,7,12,16,19][i]/12),440*Math.pow(2,[0,4,7,12,16,19][i]/12)*1.01,.18,'triangle',.35,i*.06); if(THEME.fx==='sparks') noise(.3,.35,7000); else if(THEME.fx==='dust') noise(.5,.5,250); else noise(.25,.25,2500); },
   chain:f=>{ const base=523*Math.min(4,Math.log2(f)); for(let i=0;i<5;i++) tone(base*Math.pow(2,i*3/12),base*Math.pow(2,i*3/12)*1.02,.22,'square',.25,i*.05); },
-  tip:()=>{ buzz([20,30,60]); if(THEME.fx==='dust'){ noise(.7,.7,180); tone(70,30,.7,'sawtooth',.4); } else if(THEME.fx==='sparks'){ noise(.4,.4,1200); tone(420,90,.5,'sawtooth',.25); tone(3200,2400,.3,'sine',.12); } else { noise(.45,.5,300); tone(120,40,.5,'sawtooth',.35); } },
+  tip:()=>{ buzz([20,30,60]); if(THEME.fx==='dust'){ noise(.7,.7,180); tone(70,30,.7,'sawtooth',.4); } else if(THEME.fx==='ice'){ noise(.5,.4,2500); tone(900,300,.5,'sine',.3); } else if(THEME.fx==='sparks'){ noise(.4,.4,1200); tone(420,90,.5,'sawtooth',.25); tone(3200,2400,.3,'sine',.12); } else { noise(.45,.5,300); tone(120,40,.5,'sawtooth',.35); } },
   quakeTick:()=>tone(1200,1000,.03,'square',.12),
   quake:()=>{ buzz([60,40,60,40,120]); noise(.9,.7,180); tone(60,25,.9,'sawtooth',.6); },
   anchor:()=>tone(300,150,.25,'sine',.4),
@@ -655,6 +679,11 @@ const SFX={
   freeze:()=>{ tone(1800,2400,.4,'sine',.25); tone(2400,3200,.4,'triangle',.15,.1); },
   charge:()=>{ tone(600,1200,.15,'square',.2); tone(1200,1800,.15,'square',.2,.1); },
   boing:()=>{ tone(300,700,.12,'sine',.35); tone(700,300,.18,'sine',.3,.12); },
+  shatter:()=>{ noise(.3,.6,4000); for(let i=0;i<4;i++) tone(2400+i*300,1200,.15,'sine',.18,i*.04); },
+  sweep:()=>{ [0,4,7,12,16,19,24].forEach((st,i)=>tone(523*Math.pow(2,st/12),523*Math.pow(2,st/12)*1.01,.3,'triangle',.3,i*.07)); },
+  acid:()=>{ noise(.4,.5,900); tone(500,120,.4,'sawtooth',.2); },
+  mirror:()=>{ tone(880,440,.15,'square',.2); tone(440,880,.15,'square',.2,.15); },
+  thief:()=>{ tone(1000,500,.1,'square',.2); tone(1000,500,.1,'square',.2,.12); tone(1000,500,.1,'square',.2,.24); },
   over:()=>{ [0,-3,-7,-12].forEach((st,i)=>tone(330*Math.pow(2,st/12),330*Math.pow(2,st/12)*.98,.35,'triangle',.4,i*.22)); },
 };
 let lastCharges=-1, combo=0, comboAt=0, bestCombo=1, endSnap=null, lastStars=0;
@@ -686,9 +715,9 @@ let particles=[], shake=0, fxRunning=false, fxLast=0;
 // Landing-Pop je Zelle, Punkte-Popups und Funken laufen alle über die fx-Schleife
 const pops=new Map(); let popups=[];
 const U=()=>cv.width/440; // Umrechnung CSS-Pixel der Vorlage → Canvas-Pixel
-let quakeFreezeUntil=0;
+let quakeFreezeUntil=0, featherPending=0, curSlow=false;
 // Sprengstein: Funken an einer weggesprengten Zelle
-function boomAt(x,y){ const now=performance.now(), u=U(), col=COLORS[grid[y][x]]||'#fff'; for(let i=0;i<8;i++) particles.push({x:x*CELL+CELL/2,y:y*CELL+CELL/2,dx:(Math.random()-.5)*140*u,dy:(Math.random()-.5)*140*u,col:i%3?col:'#fff',round:true,t0:now,dur:500}); }
+function boomAt(x,y,tint){ const now=performance.now(), u=U(), col=tint||COLORS[grid[y][x]]||'#fff'; for(let i=0;i<8;i++) particles.push({x:x*CELL+CELL/2,y:y*CELL+CELL/2,dx:(Math.random()-.5)*140*u,dy:(Math.random()-.5)*140*u,col:i%3?col:'#fff',round:true,t0:now,dur:500}); }
 // 14 Funken pro Reihe in Materialfarben, fliegen ±80px seitlich und 30–150px nach oben, schrumpfen auf 0
 function burst(rows){
   const now=performance.now(), round=THEME.fx==='jelly', u=U();
@@ -739,21 +768,26 @@ function popOf(y,x){
 const fullRows=()=>grid.map((r,i)=>r.every(v=>v)?i:-1).filter(i=>i>=0);
 function removeRows(rows){
   // Power-ups in den geräumten Reihen einsammeln, bevor die Reihen verschwinden
-  const rs=new Set(rows); let boom=0, frost=false, extra=0;
+  const rs=new Set(rows); let boom=0, frost=false, extra=0, acid=0, jokers=0, thief=false;
   rows.forEach(y=>{ for(let x=0;x<N;x++){ const fl=flags[y][x];
-    if(fl&FLAG_F) frost=true; if(fl&FLAG_D) extra++;
+    if(fl&FLAG_F) frost=true; if(fl&FLAG_D) extra++; if(fl&FLAG_J) jokers++; if(fl&FLAG_T) thief=true;
+    if(fl&FLAG_X) for(let ny=y+1;ny<N;ny++){ if(rs.has(ny)||!grid[ny][x])continue; boomAt(x,ny,'#8FFF9A'); grid[ny][x]=0; ids[ny][x]=0; flags[ny][x]=0; acid++; }
     if(fl&FLAG_B) for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ const ny=y+dy,nx=x+dx; if(ny<0||ny>=N||nx<0||nx>=N||rs.has(ny)||!grid[ny][nx])continue; boomAt(nx,ny); grid[ny][nx]=0; ids[ny][nx]=0; flags[ny][nx]=0; boom++; }
   }});
   if(boom){ score+=Math.round(boom*25*level*mult); SFX.boom(); shake=Math.max(shake,12); fxStart(); }
+  if(acid){ score+=Math.round(acid*15*level*mult); SFX.acid(); fxStart(); }
+  if(thief){ quakeReset(); SFX.thief(); }
   if(frost){ quakeFreezeUntil=performance.now()+10000; quakeClearWarn(); SFX.freeze(); }
+  rows.forEach(y=>{ for(let x=0;x<N;x++) if(flags[y][x]&FLAG_H) featherPending++; });
   if(extra) SFX.charge();
   [...rows].sort((a,b)=>b-a).forEach(r=>{ grid.splice(r,1); ids.splice(r,1); flags.splice(r,1); });
   rows.forEach(()=>{ grid.unshift(Array(N).fill(0)); ids.unshift(Array(N).fill(0)); flags.unshift(Array(N).fill(0)); });
   splitIds();
-  const n=rows.length, f=chain>0?THEME.chainBase**chain:1; // Kettenbonus: Reihen, die erst durch das Kippen fallen
+  const n=rows.length, f=(chain>0?THEME.chainBase**chain:1)*Math.min(4,2**jokers); // Kettenbonus: Reihen, die erst durch das Kippen fallen; Joker verdoppelt
   const pts=Math.round([0,100,300,600,1000][n]*level*mult*f); lines+=n; score+=pts;
   if(chain>0) mLayerUntil=performance.now()+2500;
-  const note=boom?T().boom:frost?T().frozen:extra?T().charge2:'';
+  const sweep=THEME.fx==='ice'&&!grid.some(r=>r.some(v=>v)); if(sweep){ score+=Math.round(1000*level*mult); SFX.sweep(); }
+  const note=sweep?T().sweep:boom?T().boom:acid?T().acid:frost?T().frozen:thief?T().thief:extra?T().charge2:jokers?T().joker:'';
   toast={text:chain>0?quip('chain'):quip(String(Math.min(n,4))),sub:[f>1?`×${f}`:'',note].filter(Boolean).join(' · '),kind:chain>0||boom?'combo':'clear',until:performance.now()+1400};
   if(challenge&&lines>=challenge.goal&&alive) setTimeout(win,450);
   charges=Math.min(5,charges+n+extra);
@@ -819,6 +853,26 @@ function settleStep(){
   }
   return moved;
 }
+// Eis rutscht: nach dem Fallen gleiten Eis-Körper in Kipprichtung bis zur Wand oder zum nächsten Körper
+let slideDir=0;
+const isIce=cells=>cells.every(([y,x])=>{ const m=matOf(flags[y][x]); return m?m===4:THEME.fx==='ice'; });
+function slideStep(dir){
+  let moved=false;
+  const bs=bodies().filter(c=>isIce(c)&&!c.some(([y,x])=>flags[y][x]&FLAG_A)).sort((a,b)=>dir*(Math.max(...b.map(p=>p[1]))-Math.max(...a.map(p=>p[1]))));
+  for(const cells of bs){
+    const own=new Set(cells.map(([y,x])=>y*N+x));
+    if(!cells.every(([y,x])=>x+dir>=0&&x+dir<N&&(!grid[y][x+dir]||own.has(y*N+x+dir))))continue;
+    cells.sort((a,b)=>dir*(b[1]-a[1]));
+    for(const [y,x] of cells){ grid[y][x+dir]=grid[y][x]; ids[y][x+dir]=ids[y][x]; flags[y][x+dir]=flags[y][x]; grid[y][x]=0; ids[y][x]=0; flags[y][x]=0; }
+    movedIds.add(ids[cells[0][0]][cells[0][1]+dir]); moved=true;
+  }
+  return moved;
+}
+// Eis zerspringt beim Auto-Kipp in Einzelzellen
+function shatterIce(){
+  let n=0; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&(matOf(flags[r][c])?matOf(flags[r][c])===4:THEME.fx==='ice')){ ids[r][c]=pieceId++; n++; }
+  if(n){ SFX.shatter(); toast={text:T().shatter,sub:'',kind:'quake',until:performance.now()+1200}; }
+}
 // Gelee federt: Körper aus Gelee, die drei oder mehr Zellen gefallen sind, hüpfen eine Zelle zurück nach oben
 const fallCount=new Map();
 function jellyBounce(){
@@ -840,6 +894,7 @@ function jellyBounce(){
 function settleAnimated(done){
   const tick=()=>{
     if(settleStep()){ draw(); setTimeout(tick,45); return; }
+    if(slideDir&&slideStep(slideDir)){ draw(); setTimeout(tick,45); return; }
     if(movedIds.size){ movedIds.forEach(id=>jiggle(id)); movedIds.clear(); jellyBounce(); }
     if(fullRows().length){ chain++; resolve(()=>setTimeout(tick,60)); return; }
     done();
@@ -866,6 +921,13 @@ function weld(metalOnly){
       for(const [dy,dx] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ny=y+dy,nx=x+dx; if(ny>=0&&ny<N&&nx>=0&&nx<N&&ok(ny,nx)&&!seen[ny][nx]){seen[ny][nx]=true;st.push([ny,nx]);} } }
   }
 }
+const findFlag=fl=>{ for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&(flags[r][c]&fl)) return [r,c]; return null; };
+// Kleber: hat sich der Körper beim Landen an eine Wand geklebt, hält er wie ein Anker; der zweite Kipp löst ihn
+function releaseGlue(){
+  const bodyIds=new Set(); for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&(flags[r][c]&FLAG_K)) bodyIds.add(ids[r][c]);
+  for(const id of bodyIds){ let first=false; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(ids[r][c]===id&&grid[r][c]&&(flags[r][c]&FLAG_K)&&!(flags[r][c]&FLAG_K1)) first=true;
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(ids[r][c]===id&&grid[r][c]){ if(first) flags[r][c]|=FLAG_K1; else flags[r][c]&=~(FLAG_A|FLAG_K|FLAG_K1); } }
+}
 // Magnetzelle: koppelt beim Kippen alle berührenden Körper an ihren eigenen, dann ist sie verbraucht
 function weldMagnets(){
   let any=false;
@@ -883,7 +945,10 @@ function splitCracks(){
 }
 function tip(dir){
   if(!alive||busy||charges<=0)return;
-  charges--; tipsUsed++; SFX.tip(); musicSweep(); if(Math.random()<.4) toast={text:quip('tip'),sub:'',until:performance.now()+700}; quakeReset(); quakeClearWarn(); doTip(dir,1);
+  charges--; tipsUsed++; SFX.tip(); musicSweep(); if(Math.random()<.4) toast={text:quip('tip'),sub:'',until:performance.now()+700}; quakeReset(); quakeClearWarn();
+  // Spiegelstein: der nächste eigene Kipp geht in die andere Richtung, dann ist er verbraucht
+  const mir=findFlag(FLAG_R); if(mir){ flags[mir[0]][mir[1]]&=~FLAG_R; dir=-dir; SFX.mirror(); toast={text:T().mirror,sub:'',kind:'quake',until:performance.now()+1000}; }
+  doTip(dir,1);
 }
 function doTip(dir,turns=1){
   busy=true;
@@ -894,12 +959,13 @@ function doTip(dir,turns=1){
   setTimeout(()=>world.classList.remove('tiltL','tiltR','tilt180'),380);
   setTimeout(()=>{
     for(let i=0;i<turns;i++) rotateGrid(dir);
-    splitCracks(); if(mix) weld(true); else if(THEME.weld) weld(); weldMagnets();
+    splitCracks(); releaseGlue(); if(mix) weld(true); else if(THEME.weld) weld(); weldMagnets();
     cv.style.transition='none'; stage.classList.remove('tipR','tipL','tip180');
     requestAnimationFrame(()=>{cv.style.transition='';});
     bodies().forEach(cells=>jiggle(ids[cells[0][0]][cells[0][1]]));
     draw(); chain=0;
-    settleAnimated(()=>{ spawn(); busy=false; draw(); tutCheck(); });
+    slideDir=(THEME.fx==='ice'||mix)?dir:0;
+    settleAnimated(()=>{ slideDir=0; spawn(); busy=false; draw(); tutCheck(); });
   },turns===2?560:400);
   });
 }
@@ -921,7 +987,7 @@ function quakeUpdate(){
   document.getElementById('quakeFill').style.width=pct+'%';
   bar.style.setProperty('--bw',bar.clientWidth+'px'); bar.setAttribute('aria-valuenow',Math.round(pct)); document.getElementById('quakeRow').classList.toggle('hot',warn||pct>=80);
   if(warn&&now-warnTickAt>(quakeT<1500?250:500)){ warnTickAt=now; SFX.quakeTick(); }
-  if(quakeT<=0){ quakeClearWarn(); quakes++; SFX.quake(); musicSweep(); toast={text:quip('quake'),sub:'',kind:'quake',until:performance.now()+1400}; worldQuake(); doTip(quakeDir,quakeTurns); quakeReset(); }
+  if(quakeT<=0){ quakeClearWarn(); quakes++; SFX.quake(); musicSweep(); toast={text:quip('quake'),sub:'',kind:'quake',until:performance.now()+1400}; worldQuake(); shatterIce(); doTip(quakeDir,quakeTurns); quakeReset(); }
 }
 function quakeClearWarn(){ document.querySelectorAll('.tip.warn').forEach(b=>b.classList.remove('warn')); document.getElementById('quakeRow').classList.remove('hot'); }
 // Die ganze Welt wackelt ±4px / ±0.8° beim Beben
@@ -948,7 +1014,7 @@ function drop(){
   const now=performance.now(); combo=(now-comboAt<1300)?combo+1:1; comboAt=now; bestCombo=Math.max(bestCombo,combo); if(combo>=3){ score+=Math.round(combo*5*mult); toast={text:`${T().combo} ×${combo}`,sub:'',kind:'combo',until:now+1000}; }
   SFX.drop(); lock(); resolve(()=>{ spawn(); draw(); tutCheck(); });
 }
-function restartTimer(){ clearInterval(timer); timer=setInterval(step,Math.max(110,(700-(level-1)*60)*THEME.speed*tempo())); }
+function restartTimer(){ clearInterval(timer); timer=setInterval(step,Math.max(110,(700-(level-1)*60)*THEME.speed*tempo())*(curSlow?2:1)); }
 setInterval(quakeUpdate,100);
 setInterval(()=>{ if(ghostRun&&daily&&alive&&!busy) draw(); },500);
 function gameOver(){
@@ -1140,7 +1206,7 @@ addEventListener('keydown',e=>{
   if(paused){ e.preventDefault(); resume(); } else if(alive){ e.preventDefault(); pause(); }
 });
 function start(){
-  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0; quakeFreezeUntil=0; fallCount.clear();
+  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0; quakeFreezeUntil=0; fallCount.clear(); featherPending=0; curSlow=false; slideDir=0;
   if(mode!=='tutorial'){ tut=null; document.getElementById('hint').hidden=true; }
   daily=mode==='daily'; story=mode==='story'?storyLevel(storyCh,storyLv):null; challenge=mode==='challenge'?CHALLENGES[chIdx]:story; if(mode!=='endless') mix=false;
   if(story){ themeKey=story.theme; }
@@ -1200,6 +1266,12 @@ function paintBlock(g,px,py,w,col,fx=THEME.fx,glow=1){
     g.save(); rrOn(g,px,py,w,w,r); g.clip();
     const lg=g.createLinearGradient(px,py,px+w,py+w); lg.addColorStop(0,'#ffffff'); lg.addColorStop(.22,col); lg.addColorStop(.5,'#1a1e26'); lg.addColorStop(.54,col); lg.addColorStop(1,'#050608'); g.fillStyle=lg; g.fillRect(px,py,w,w);
     g.strokeStyle='rgba(255,255,255,.15)'; g.lineWidth=2; rrOn(g,px+.5,py+.5,w-1,w-1,r); g.stroke(); g.restore();
+  } else if(fx==='ice'){ // Eis: kühler Schein, diagonale Facetten, heller Rand oben links
+    g.save(); g.shadowColor=col+'66'; g.shadowBlur=w*.2*glow; g.fillStyle=col; rrOn(g,px,py,w,w,r); g.fill(); g.restore();
+    g.save(); rrOn(g,px,py,w,w,r); g.clip();
+    const lg=g.createLinearGradient(px,py,px+w,py+w); lg.addColorStop(0,'rgba(255,255,255,.6)'); lg.addColorStop(.45,'rgba(255,255,255,.08)'); lg.addColorStop(.5,'rgba(255,255,255,.35)'); lg.addColorStop(.56,'rgba(255,255,255,.05)'); lg.addColorStop(1,'rgba(0,40,80,.35)'); g.fillStyle=lg; g.fillRect(px,py,w,w);
+    g.strokeStyle='rgba(255,255,255,.45)'; g.lineWidth=Math.max(1,w*.04); g.beginPath(); g.moveTo(px+w*.15,py+w*.95); g.lineTo(px+w*.95,py+w*.15); g.stroke();
+    g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(px,py,w,Math.max(1,w*.04)); g.fillRect(px,py,Math.max(1,w*.04),w); g.restore();
   } else { // Gelee: Schein, Glanzpunkt oben links, dunkle Unterkante, heller Rand oben
     g.save(); g.shadowColor=col+'78'; g.shadowBlur=w*.29*glow; g.fillStyle=col; rrOn(g,px,py,w,w,r); g.fill(); g.restore();
     g.save(); rrOn(g,px,py,w,w,r); g.clip();
@@ -1208,7 +1280,7 @@ function paintBlock(g,px,py,w,col,fx=THEME.fx,glow=1){
   }
 }
 // Anker- und Riss-Symbole auf Kacheln
-function mark(x,y,fl){ if(fl&(FLAG_A|FLAG_C|PUP_MASK)) markOn(ctx,x*CELL+CELL/2,y*CELL+CELL/2,CELL,fl); }
+function mark(x,y,fl){ if(fl&(FLAG_A|FLAG_C|PUP_MASK|FLAG_K1)) markOn(ctx,x*CELL+CELL/2,y*CELL+CELL/2,CELL,fl); }
 // Symbole auf Kacheln: Anker, Riss, Sprengstein, Magnet, Frost, Doppel-Ladung (Brett und Vorschau)
 function markOn(g,cx,cy,S,fl){
   g.save(); g.strokeStyle='rgba(0,0,0,.55)'; g.fillStyle='rgba(0,0,0,.55)'; g.lineWidth=Math.max(1.5,S*.07); g.lineCap='round'; g.lineJoin='round';
@@ -1234,6 +1306,31 @@ function markOn(g,cx,cy,S,fl){
     g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=Math.max(1.5,S*.06);
     for(let k=0;k<3;k++){ const a=k*Math.PI/3; g.beginPath(); g.moveTo(cx-Math.cos(a)*S*.28,cy-Math.sin(a)*S*.28); g.lineTo(cx+Math.cos(a)*S*.28,cy+Math.sin(a)*S*.28); g.stroke(); }
     g.fillStyle='rgba(255,255,255,.9)'; g.beginPath(); g.arc(cx,cy,S*.06,0,Math.PI*2); g.fill();
+  }
+  if(fl&FLAG_X){ // Säure: grüner Tropfen
+    g.fillStyle='#4CCB5A'; g.beginPath(); g.moveTo(cx,cy-S*.3); g.quadraticCurveTo(cx+S*.28,cy+S*.02,cx+S*.16,cy+S*.18); g.arc(cx,cy+S*.14,S*.16,.25*Math.PI,.75*Math.PI,false); g.quadraticCurveTo(cx-S*.28,cy+S*.02,cx,cy-S*.3); g.fill();
+    g.fillStyle='rgba(255,255,255,.6)'; g.beginPath(); g.arc(cx-S*.06,cy+S*.1,S*.05,0,Math.PI*2); g.fill();
+  }
+  if(fl&FLAG_R){ // Spiegel: zwei Dreiecke, dazwischen eine Linie
+    g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.moveTo(cx-S*.06,cy); g.lineTo(cx-S*.3,cy-S*.2); g.lineTo(cx-S*.3,cy+S*.2); g.closePath(); g.fill();
+    g.fillStyle='#EDE8DC'; g.beginPath(); g.moveTo(cx+S*.06,cy); g.lineTo(cx+S*.3,cy-S*.2); g.lineTo(cx+S*.3,cy+S*.2); g.closePath(); g.fill();
+    g.strokeStyle='rgba(255,255,255,.8)'; g.lineWidth=Math.max(1.5,S*.06); g.beginPath(); g.moveTo(cx,cy-S*.3); g.lineTo(cx,cy+S*.3); g.stroke();
+  }
+  if(fl&FLAG_H){ // Feder: Kiel mit Fahne
+    g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=Math.max(1.5,S*.06); g.beginPath(); g.moveTo(cx-S*.26,cy+S*.28); g.quadraticCurveTo(cx,cy,cx+S*.26,cy-S*.28); g.stroke();
+    g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.moveTo(cx-S*.12,cy+S*.12); g.quadraticCurveTo(cx-S*.2,cy-S*.25,cx+S*.26,cy-S*.28); g.quadraticCurveTo(cx+S*.2,cy+S*.05,cx-S*.12,cy+S*.12); g.fill();
+  }
+  if(fl&FLAG_K){ // Kleber: Flasche, festgeklebt mit Punkt
+    g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(cx-S*.14,cy-S*.06,S*.28,S*.34); g.fillRect(cx-S*.05,cy-S*.22,S*.1,S*.18);
+    g.fillStyle=fl&FLAG_K1?'#FF9F1C':'#FFD23F'; g.fillRect(cx-S*.09,cy+S*.02,S*.18,S*.2);
+  }
+  if(fl&FLAG_J){ // Joker: Stern
+    g.fillStyle='rgba(0,0,0,.55)'; g.beginPath(); for(let k=0;k<10;k++){ const a=-Math.PI/2+k*Math.PI/5, rr_=k%2?S*.13:S*.3; g.lineTo(cx+Math.cos(a)*rr_,cy+Math.sin(a)*rr_); } g.closePath(); g.fill();
+    g.fillStyle='#FFD23F'; g.beginPath(); for(let k=0;k<10;k++){ const a=-Math.PI/2+k*Math.PI/5, rr_=k%2?S*.09:S*.22; g.lineTo(cx+Math.cos(a)*rr_,cy+Math.sin(a)*rr_); } g.closePath(); g.fill();
+  }
+  if(fl&FLAG_T){ // Zeitdieb: Sanduhr
+    g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.moveTo(cx-S*.22,cy-S*.3); g.lineTo(cx+S*.22,cy-S*.3); g.lineTo(cx,cy); g.lineTo(cx+S*.22,cy+S*.3); g.lineTo(cx-S*.22,cy+S*.3); g.lineTo(cx,cy); g.closePath(); g.fill();
+    g.fillStyle='#FFD23F'; g.beginPath(); g.moveTo(cx-S*.1,cy+S*.24); g.lineTo(cx+S*.1,cy+S*.24); g.lineTo(cx,cy+S*.08); g.closePath(); g.fill();
   }
   if(fl&FLAG_D){ // Doppel-Ladung: Blitz
     g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.moveTo(cx+S*.08,cy-S*.32); g.lineTo(cx-S*.16,cy+S*.04); g.lineTo(cx-S*.01,cy+S*.04); g.lineTo(cx-S*.08,cy+S*.32); g.lineTo(cx+S*.16,cy-S*.04); g.lineTo(cx+S*.01,cy-S*.04); g.closePath(); g.fill();
@@ -1461,7 +1558,10 @@ addEventListener('keydown',e=>{
   k==='soft'? step() : actions[k]();
   if(e.key==='t'||e.key==='T') cycleTheme();
 });
-applyTheme(); grid=empty(); ids=empty(); flags=empty(); draw(); requestAnimationFrame(bgTick);
+// Canvas-Auflösung folgt der Anzeigegröße (bis 2× Pixeldichte), damit große Bretter scharf bleiben
+function fitCanvas(){ const w=cv.getBoundingClientRect().width||440; const px=Math.max(320,Math.min(1600,Math.round(w*Math.min(2,devicePixelRatio||1)))); if(px!==cv.width){ cv.width=cv.height=px; CELL=cv.width/N; if(grid) draw(); } }
+let fitTimer=null; addEventListener('resize',()=>{ clearTimeout(fitTimer); fitTimer=setTimeout(fitCanvas,80); });
+applyTheme(); grid=empty(); ids=empty(); flags=empty(); fitCanvas(); draw(); requestAnimationFrame(bgTick);
 </script>
 </body>
 </html>
