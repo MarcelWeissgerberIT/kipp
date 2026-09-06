@@ -117,6 +117,8 @@
   .quakerow.hot .quakebar i{box-shadow:0 0 14px rgba(255,94,91,.8);animation:kHot .4s ease-in-out infinite alternate}
   .qicon{font-size:15px;line-height:18px;width:18px;text-align:center;border-radius:50%;color:var(--dim);font-weight:800;font-style:normal;flex:none}
   .quakerow.hot .qicon{color:var(--danger);animation:kPulse .8s ease-out infinite}
+  .quakerow.frozen .quakebar i{background:linear-gradient(90deg,#BFE9FF,#6FD3FF);box-shadow:0 0 12px rgba(150,220,255,.8);animation:none}
+  .quakerow.frozen .qicon{color:#BFE9FF;animation:none}
   @keyframes warn{from{background:linear-gradient(180deg,#43709F,#34577E)}to{background:linear-gradient(180deg,#C24747,#8F2F2F)}}
   @media (prefers-reduced-motion:reduce){.dpad .tip.warn{animation:none;background:linear-gradient(180deg,#C24747,#8F2F2F)}}
   .settings{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px}
@@ -300,6 +302,10 @@ let N=12, CELL=40, mult=1.5;
 let quake=true, quakeT=0, quakeDir=0, quakeTurns=1, quakeMax=0, lastTick=0; // Beben: selbstständiges Kippen
 const FLAG_A=1, FLAG_C=2; // Anker, Riss; Bits 4+8 = Material je Zelle (0 = Thema, 1 Gelee, 2 Stein, 3 Metall)
 const MATS=['','jelly','stone','metal'], matOf=fl=>(fl>>2)&3;
+// Power-up-Zellen (Bits 16+): Sprengstein, Magnet, Frost, Doppel-Ladung; Geist gilt für den ganzen Stein
+const FLAG_B=16, FLAG_M=32, FLAG_F=64, FLAG_D=128, FLAG_G=256, PUP_MASK=FLAG_B|FLAG_M|FLAG_F|FLAG_D|FLAG_G;
+const PUPS=[[FLAG_B,'Bomb',3],[FLAG_M,'Magnet',2],[FLAG_F,'Frost',2],[FLAG_D,'Charge',3],[FLAG_G,'Ghost',2]]; // Flag, i18n-Schlüssel, Gewicht
+const PUP_CHANCE=.14; const seenPup=new Set();
 let mix=false;
 let flags, pieceCount=0, nextAnchorAt=0, chain=0, tipsUsed=0, quakes=0, toast=null;
 let daily=false, rnd=Math.random;
@@ -316,7 +322,7 @@ const I18N={
     overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} quakes survived.`,
     winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} quakes. Try it with fewer tips?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} quakes`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. Quakes and the bar wait with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Quakes',lblCombo:'Combo',
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the quake',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Quake frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. Quakes and the bar wait with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Quakes',lblCombo:'Combo',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -326,7 +332,7 @@ const I18N={
       'Rows that only complete after a tip count as a chain: ×3 in Jelly, then ×9.',
       'Tipping costs a charge (the blue dots). Every full row refills one.',
       'The bar under the board fills up. When it is full, the board quakes by itself. Tipping yourself resets it.',
-      'That is all. Anchors, cracks and materials you will discover while playing.'],
+      'That is all. Anchors, cracks, materials and power-up pieces you will discover while playing.'],
     tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material'],['Esc / P','Pause']],quakeBar:'Time until the quake',size:'Board size',mute:'Sound off',unmute:'Sound on'},
   de:{intro:'Fallende Steine – aber das Brett kippt. Alles, was nicht aufliegt, fällt.',
     sizes:['Weit','Normal','Eng','Brutal'],modes:['Endlos','Tagesbrett','Story','Challenges'],quakeOn:'Beben an',quakeOff:'Beben aus',
@@ -335,7 +341,7 @@ const I18N={
     overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Beben überstanden.`,
     winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Beben. Schaffst du es mit weniger Kipps?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Beben`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Beben und Balken warten mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Beben',lblCombo:'Kombo',
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert das Beben ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Beben 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Beben und Balken warten mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Beben',lblCombo:'Kombo',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -345,7 +351,7 @@ const I18N={
       'Reihen, die erst nach dem Kippen voll werden, zählen als Kette: ×3 bei Gelee, dann ×9.',
       'Kippen kostet eine Ladung (die blauen Punkte). Jede volle Reihe füllt eine nach.',
       'Der Balken unter dem Brett läuft voll. Ist er voll, bebt das Brett von selbst. Selber kippen setzt ihn zurück.',
-      'Das war alles. Anker, Risse und Materialien entdeckst du beim Spielen.'],
+      'Das war alles. Anker, Risse, Materialien und Power-up-Steine entdeckst du beim Spielen.'],
     tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material'],['Esc / P','Pause']],quakeBar:'Zeit bis zum Beben',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
 };
 // Sprüche beim Auflösen, nach Reihenzahl / Kette / Kipp / Ende
@@ -510,14 +516,21 @@ function makePiece(){
   } else if(MT.crack&&rnd()<MT.crack){
     const cells=[]; m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)cells.push([r,c]); }));
     const [r,c]=cells[Math.floor(rnd()*cells.length)]; f[r][c]|=FLAG_C;
+  } else if(mode!=='tutorial'&&rnd()<PUP_CHANCE){
+    // Power-up: gewichtete Auswahl, Geist für den ganzen Stein, sonst eine Zelle
+    const total=PUPS.reduce((a,p)=>a+p[2],0); let k=rnd()*total, fl=PUPS[0][0]; for(const p of PUPS){ k-=p[2]; if(k<0){ fl=p[0]; break; } }
+    if(fl===FLAG_G) m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)f[r][c]|=FLAG_G; }));
+    else { const cells=[]; m.forEach((row,r)=>row.forEach((v,c)=>{ if(v)cells.push([r,c]); })); const [r,c]=cells[Math.floor(rnd()*cells.length)]; f[r][c]|=fl; }
   }
   return {i,f};
 }
 function spawn(){
   if(next===null)next=makePiece();
   const p=next; next=makePiece();
-  cur={m:SHAPES[p.i].map(r=>[...r]),f:p.f,col:p.i+1,x:Math.floor((N-SHAPES[p.i][0].length)/2),y:0};
-  if(hits(cur.m,cur.x,cur.y)) gameOver();
+  cur={m:SHAPES[p.i].map(r=>[...r]),f:p.f,col:p.i+1,x:Math.floor((N-SHAPES[p.i][0].length)/2),y:0,ghost:p.f.flat().some(v=>v&FLAG_G)};
+  const pf=p.f.flat().reduce((a,v)=>a|v,0)&PUP_MASK;
+  if(pf&&!toast){ const pu=PUPS.find(q=>pf&q[0]); if(pu&&!seenPup.has(pu[1])){ seenPup.add(pu[1]); toast={text:T()['pup'+pu[1]],sub:T()['hint'+pu[1]],until:performance.now()+1600}; } }
+  if(cur.ghost?ghostTarget(cur.m,cur.x)<0:hits(cur.m,cur.x,cur.y)) gameOver();
 }
 function drawNext(){
   const nc=document.getElementById('next'), c2=nc.getContext('2d');
@@ -525,15 +538,16 @@ function drawNext(){
   if(next===null)return;
   // 4×4-Raster im Material-Look, 85 % Deckkraft
   const m=SHAPES[next.i], s=nc.width/4, ox=Math.floor((4-m[0].length)/2)*s, oy=Math.floor((4-m.length)/2)*s, col=COLORS[next.i+1];
-  c2.globalAlpha=.85;
+  const isGhost=next.f.flat().some(v=>v&FLAG_G);
+  c2.globalAlpha=isGhost?.45:.85;
   m.forEach((row,r)=>row.forEach((v,c)=>{ if(v) paintBlock(c2,ox+c*s+2,oy+r*s+2,s-4,col,matFx(next.f[r][c]),.6); }));
-  c2.globalAlpha=1; c2.shadowBlur=0; c2.strokeStyle='rgba(0,0,0,.6)'; c2.lineWidth=2; c2.lineCap='round';
-  m.forEach((row,r)=>row.forEach((v,c)=>{
-    const fl=next.f[r][c], cx=ox+c*s+s/2, cy=oy+r*s+s/2;
-    if(fl&FLAG_A){ c2.beginPath(); c2.arc(cx,cy,s*.2,0,Math.PI*2); c2.stroke(); }
-    if(fl&FLAG_C){ c2.beginPath(); c2.moveTo(cx-s*.25,cy-s*.25); c2.lineTo(cx+s*.25,cy+s*.25); c2.stroke(); }
-  }));
+  c2.globalAlpha=1;
+  if(isGhost){ c2.save(); c2.strokeStyle=col; c2.lineWidth=2; c2.setLineDash([4,3]); m.forEach((row,r)=>row.forEach((v,c)=>{ if(v) c2.strokeRect(ox+c*s+3,oy+r*s+3,s-6,s-6); })); c2.restore(); }
+  m.forEach((row,r)=>row.forEach((v,c)=>{ const fl=next.f[r][c]; if(v&&(fl&(FLAG_A|FLAG_C|PUP_MASK))) markOn(c2,ox+c*s+s/2,oy+r*s+s/2,s,fl); }));
 }
+// Geisterstein: nur Wände zählen, gelandet wird auf der tiefsten freien Position
+function wallHit(m,x,y){ for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){ if(!m[r][c])continue; const gx=x+c, gy=y+r; if(gx<0||gx>=N||gy>=N)return true; } return false; }
+function ghostTarget(m,x){ for(let y=N-1;y>=0;y--) if(!hits(m,x,y)) return y; return -1; }
 function hits(m,x,y){
   for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){
     if(!m[r][c])continue;
@@ -544,7 +558,7 @@ function hits(m,x,y){
 }
 function lock(){
   const id=pieceId++;
-  cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0){ grid[cur.y+r][cur.x+c]=cur.col; ids[cur.y+r][cur.x+c]=id; flags[cur.y+r][cur.x+c]=cur.f[r][c]; } }));
+  cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0){ grid[cur.y+r][cur.x+c]=cur.col; ids[cur.y+r][cur.x+c]=id; flags[cur.y+r][cur.x+c]=cur.f[r][c]&~FLAG_G; } }));
   if(cur.f.flat().some(v=>v&FLAG_A)) SFX.anchor();
   if(!bgReduced){ const now=performance.now(); cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v&&cur.y+r>=0) pops.set(`${cur.y+r},${cur.x+c}`,now); })); fxStart(); }
   cur=null; chain=0; wob.delete('cur'); jiggle(id); tutLocks++;
@@ -606,6 +620,11 @@ const SFX={
   quakeTick:()=>tone(1200,1000,.03,'square',.12),
   quake:()=>{ buzz([60,40,60,40,120]); noise(.9,.7,180); tone(60,25,.9,'sawtooth',.6); },
   anchor:()=>tone(300,150,.25,'sine',.4),
+  boom:()=>{ buzz([40,30,80]); noise(.35,.8,500); tone(120,40,.4,'sawtooth',.5); },
+  magnet:()=>{ tone(200,900,.2,'sine',.3); tone(900,200,.2,'sine',.2,.1); },
+  freeze:()=>{ tone(1800,2400,.4,'sine',.25); tone(2400,3200,.4,'triangle',.15,.1); },
+  charge:()=>{ tone(600,1200,.15,'square',.2); tone(1200,1800,.15,'square',.2,.1); },
+  boing:()=>{ tone(300,700,.12,'sine',.35); tone(700,300,.18,'sine',.3,.12); },
   over:()=>{ [0,-3,-7,-12].forEach((st,i)=>tone(330*Math.pow(2,st/12),330*Math.pow(2,st/12)*.98,.35,'triangle',.4,i*.22)); },
 };
 let lastCharges=-1, combo=0, comboAt=0, bestCombo=1, endSnap=null, lastStars=0;
@@ -637,6 +656,9 @@ let particles=[], shake=0, fxRunning=false, fxLast=0;
 // Landing-Pop je Zelle, Punkte-Popups und Funken laufen alle über die fx-Schleife
 const pops=new Map(); let popups=[];
 const U=()=>cv.width/440; // Umrechnung CSS-Pixel der Vorlage → Canvas-Pixel
+let quakeFreezeUntil=0;
+// Sprengstein: Funken an einer weggesprengten Zelle
+function boomAt(x,y){ const now=performance.now(), u=U(), col=COLORS[grid[y][x]]||'#fff'; for(let i=0;i<8;i++) particles.push({x:x*CELL+CELL/2,y:y*CELL+CELL/2,dx:(Math.random()-.5)*140*u,dy:(Math.random()-.5)*140*u,col:i%3?col:'#fff',round:true,t0:now,dur:500}); }
 // 14 Funken pro Reihe in Materialfarben, fliegen ±80px seitlich und 30–150px nach oben, schrumpfen auf 0
 function burst(rows){
   const now=performance.now(), round=THEME.fx==='jelly', u=U();
@@ -686,15 +708,25 @@ function popOf(y,x){
 }
 const fullRows=()=>grid.map((r,i)=>r.every(v=>v)?i:-1).filter(i=>i>=0);
 function removeRows(rows){
+  // Power-ups in den geräumten Reihen einsammeln, bevor die Reihen verschwinden
+  const rs=new Set(rows); let boom=0, frost=false, extra=0;
+  rows.forEach(y=>{ for(let x=0;x<N;x++){ const fl=flags[y][x];
+    if(fl&FLAG_F) frost=true; if(fl&FLAG_D) extra++;
+    if(fl&FLAG_B) for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ const ny=y+dy,nx=x+dx; if(ny<0||ny>=N||nx<0||nx>=N||rs.has(ny)||!grid[ny][nx])continue; boomAt(nx,ny); grid[ny][nx]=0; ids[ny][nx]=0; flags[ny][nx]=0; boom++; }
+  }});
+  if(boom){ score+=Math.round(boom*25*level*mult); SFX.boom(); shake=Math.max(shake,12); fxStart(); }
+  if(frost){ quakeFreezeUntil=performance.now()+10000; quakeClearWarn(); SFX.freeze(); }
+  if(extra) SFX.charge();
   [...rows].sort((a,b)=>b-a).forEach(r=>{ grid.splice(r,1); ids.splice(r,1); flags.splice(r,1); });
   rows.forEach(()=>{ grid.unshift(Array(N).fill(0)); ids.unshift(Array(N).fill(0)); flags.unshift(Array(N).fill(0)); });
   splitIds();
   const n=rows.length, f=chain>0?THEME.chainBase**chain:1; // Kettenbonus: Reihen, die erst durch das Kippen fallen
   const pts=Math.round([0,100,300,600,1000][n]*level*mult*f); lines+=n; score+=pts;
   if(chain>0) mLayerUntil=performance.now()+2500;
-  toast={text:chain>0?quip('chain'):quip(String(Math.min(n,4))),sub:f>1?`×${f}`:'',kind:chain>0?'combo':'clear',until:performance.now()+1400};
+  const note=boom?T().boom:frost?T().frozen:extra?T().charge2:'';
+  toast={text:chain>0?quip('chain'):quip(String(Math.min(n,4))),sub:[f>1?`×${f}`:'',note].filter(Boolean).join(' · '),kind:chain>0||boom?'combo':'clear',until:performance.now()+1400};
   if(challenge&&lines>=challenge.goal&&alive) setTimeout(win,450);
-  charges=Math.min(5,charges+n);
+  charges=Math.min(5,charges+n+extra);
   const prevLevel=level; level=1+Math.floor(lines/8);
   if(level!==prevLevel&&quakeMax){ const frac=quakeT/quakeMax; quakeMax=quakeInterval(); quakeT=quakeMax*frac; }
   restartTimer();
@@ -753,15 +785,32 @@ function settleStep(){
     if(!canFall)continue;
     cells.sort((a,b)=>b[0]-a[0]);
     for(const [y,x] of cells){grid[y+1][x]=grid[y][x];ids[y+1][x]=ids[y][x];flags[y+1][x]=flags[y][x];grid[y][x]=0;ids[y][x]=0;flags[y][x]=0;}
-    movedIds.add(ids[cells[0][0]+1][cells[0][1]]); moved=true;
+    const mid=ids[cells[0][0]+1][cells[0][1]]; movedIds.add(mid); fallCount.set(mid,(fallCount.get(mid)||0)+1); moved=true;
   }
   return moved;
+}
+// Gelee federt: Körper aus Gelee, die drei oder mehr Zellen gefallen sind, hüpfen eine Zelle zurück nach oben
+const fallCount=new Map();
+function jellyBounce(){
+  let any=false;
+  for(const cells of bodies()){
+    const id=ids[cells[0][0]][cells[0][1]]; if((fallCount.get(id)||0)<3)continue;
+    if(cells.some(([y,x])=>flags[y][x]&FLAG_A))continue;
+    const jelly=cells.every(([y,x])=>{ const m=matOf(flags[y][x]); return m?m===1:THEME.fx==='jelly'; }); if(!jelly)continue;
+    const own=new Set(cells.map(([y,x])=>y*N+x));
+    if(!cells.every(([y,x])=>y-1>=0&&(!grid[y-1][x]||own.has((y-1)*N+x))))continue;
+    cells.sort((a,b)=>a[0]-b[0]);
+    for(const [y,x] of cells){ grid[y-1][x]=grid[y][x]; ids[y-1][x]=ids[y][x]; flags[y-1][x]=flags[y][x]; grid[y][x]=0; ids[y][x]=0; flags[y][x]=0; }
+    jiggle(id); any=true;
+  }
+  fallCount.clear();
+  if(any){ SFX.boing(); if(!toast) toast={text:T().boing,sub:'',until:performance.now()+800}; draw(); }
 }
 // Sichtbares Fallen: eine Zeile pro Tick, dann Reihen räumen, ggf. weiterfallen
 function settleAnimated(done){
   const tick=()=>{
     if(settleStep()){ draw(); setTimeout(tick,45); return; }
-    if(movedIds.size){ movedIds.forEach(id=>jiggle(id)); movedIds.clear(); }
+    if(movedIds.size){ movedIds.forEach(id=>jiggle(id)); movedIds.clear(); jellyBounce(); }
     if(fullRows().length){ chain++; resolve(()=>setTimeout(tick,60)); return; }
     done();
   };
@@ -787,6 +836,17 @@ function weld(metalOnly){
       for(const [dy,dx] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ny=y+dy,nx=x+dx; if(ny>=0&&ny<N&&nx>=0&&nx<N&&ok(ny,nx)&&!seen[ny][nx]){seen[ny][nx]=true;st.push([ny,nx]);} } }
   }
 }
+// Magnetzelle: koppelt beim Kippen alle berührenden Körper an ihren eigenen, dann ist sie verbraucht
+function weldMagnets(){
+  let any=false;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&(flags[r][c]&FLAG_M)){
+    const id0=ids[r][c]; let hit=false;
+    for(const [dy,dx] of [[1,0],[-1,0],[0,1],[0,-1]]){ const ny=r+dy,nx=c+dx; if(ny<0||ny>=N||nx<0||nx>=N||!grid[ny][nx]||ids[ny][nx]===id0)continue;
+      const old=ids[ny][nx]; for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(ids[y][x]===old) ids[y][x]=id0; hit=true; }
+    if(hit){ flags[r][c]&=~FLAG_M; any=true; }
+  }
+  if(any){ SFX.magnet(); toast={text:T().welded,sub:'',kind:'combo',until:performance.now()+1000}; }
+}
 // Riss-Zellen brechen beim ersten Kippen aus ihrem Stein heraus
 function splitCracks(){
   for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&(flags[r][c]&FLAG_C)){ ids[r][c]=pieceId++; flags[r][c]&=~FLAG_C; }
@@ -797,14 +857,14 @@ function tip(dir){
 }
 function doTip(dir,turns=1){
   busy=true;
-  if(cur){ while(!hits(cur.m,cur.x,cur.y+1))cur.y++; lock(); }
+  if(cur){ if(cur.ghost){ const t=ghostTarget(cur.m,cur.x); if(t>=0){ cur.y=t; lock(); } else cur=null; } else { while(!hits(cur.m,cur.x,cur.y+1))cur.y++; lock(); } }
   resolve(()=>{
   stage.classList.add(turns===2?'tip180':(dir>0?'tipR':'tipL')); draw();
   const world=document.getElementById('world'); world.classList.add(turns===2?'tilt180':(dir>0?'tiltR':'tiltL')); bgDrift={vx:dir*260,t:.6};
   setTimeout(()=>world.classList.remove('tiltL','tiltR','tilt180'),380);
   setTimeout(()=>{
     for(let i=0;i<turns;i++) rotateGrid(dir);
-    splitCracks(); if(mix) weld(true); else if(THEME.weld) weld();
+    splitCracks(); if(mix) weld(true); else if(THEME.weld) weld(); weldMagnets();
     cv.style.transition='none'; stage.classList.remove('tipR','tipL','tip180');
     requestAnimationFrame(()=>{cv.style.transition='';});
     bodies().forEach(cells=>jiggle(ids[cells[0][0]][cells[0][1]]));
@@ -820,6 +880,9 @@ function quakeUpdate(){
   const now=performance.now(), dt=lastTick?now-lastTick:0; lastTick=now;
   if(alive&&!paused) tempoTick();
   if(!quake||!alive||busy||paused)return;
+  const frozen=now<quakeFreezeUntil, qrow=document.getElementById('quakeRow');
+  qrow.classList.toggle('frozen',frozen); document.getElementById('quakeIcon').textContent=frozen?'❄':'〰';
+  if(frozen) return;
   quakeT-=dt;
   const warn=quakeT<4500;
   document.querySelector('[data-a="tipL"]').classList.toggle('warn',warn&&(quakeDir<0||quakeTurns===2));
@@ -836,19 +899,22 @@ function worldQuake(){ const w=document.getElementById('world'); w.classList.rem
 function step(){
   if(!alive||busy||paused)return;
   if(!cur){spawn();draw();return;}
-  if(!hits(cur.m,cur.x,cur.y+1)) cur.y++;
+  if(cur.ghost){ const t=ghostTarget(cur.m,cur.x); if(t<0){ gameOver(); return; } if(t>cur.y){ cur.y++; draw(); return; } cur.y=t; }
+  if(!cur.ghost&&!hits(cur.m,cur.x,cur.y+1)) cur.y++;
   else { SFX.lock(); lock(); resolve(()=>{ spawn(); draw(); tutCheck(); }); }
   draw();
 }
-function move(dx){ if(cur&&!busy&&!hits(cur.m,cur.x+dx,cur.y)){cur.x+=dx;SFX.move();draw();tutCheck();} }
+const canBe=(m,x,y)=>cur&&cur.ghost?(!wallHit(m,x,y)&&ghostTarget(m,x)>=y):!hits(m,x,y);
+function move(dx){ if(cur&&!busy&&canBe(cur.m,cur.x+dx,cur.y)){cur.x+=dx;SFX.move();draw();tutCheck();} }
 function rotate(){
   if(!cur||busy)return;
   const m=rotMat(cur.m), f=rotMat(cur.f);
-  for(const k of [0,-1,1,-2,2]) if(!hits(m,cur.x+k,cur.y)){cur.m=m;cur.f=f;cur.x+=k;SFX.rot();jiggle('cur');draw();tutRot++;tutCheck();return;}
+  for(const k of [0,-1,1,-2,2]) if(canBe(m,cur.x+k,cur.y)){cur.m=m;cur.f=f;cur.x+=k;SFX.rot();jiggle('cur');draw();tutRot++;tutCheck();return;}
 }
 function drop(){
   if(!cur||busy)return;
-  while(!hits(cur.m,cur.x,cur.y+1)){cur.y++;score+=Math.round(2*mult);}
+  if(cur.ghost){ const t=ghostTarget(cur.m,cur.x); if(t<0){ gameOver(); return; } score+=Math.round(2*mult*Math.max(0,t-cur.y)); cur.y=t; }
+  else while(!hits(cur.m,cur.x,cur.y+1)){cur.y++;score+=Math.round(2*mult);}
   const now=performance.now(); combo=(now-comboAt<1300)?combo+1:1; comboAt=now; bestCombo=Math.max(bestCombo,combo); if(combo>=3){ score+=Math.round(combo*5*mult); toast={text:`${T().combo} ×${combo}`,sub:'',kind:'combo',until:now+1000}; }
   SFX.drop(); lock(); resolve(()=>{ spawn(); draw(); tutCheck(); });
 }
@@ -1021,7 +1087,7 @@ function pause(){
 function resume(){
   if(!paused)return; paused=false; pov.classList.remove('show');
   if(daily) runStart+=performance.now()-pausedAt; // Ghost-Replay läuft nicht weiter, solange pausiert
-  speedT0+=performance.now()-pausedAt;
+  speedT0+=performance.now()-pausedAt; if(quakeFreezeUntil>pausedAt) quakeFreezeUntil+=performance.now()-pausedAt;
   lastTick=performance.now(); musicStart(); restartTimer(); draw();
 }
 function quitToMenu(){
@@ -1044,7 +1110,7 @@ addEventListener('keydown',e=>{
   if(paused){ e.preventDefault(); resume(); } else if(alive){ e.preventDefault(); pause(); }
 });
 function start(){
-  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0;
+  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0; quakeFreezeUntil=0; fallCount.clear();
   if(mode!=='tutorial'){ tut=null; document.getElementById('hint').hidden=true; }
   daily=mode==='daily'; story=mode==='story'?storyLevel(storyCh,storyLv):null; challenge=mode==='challenge'?CHALLENGES[chIdx]:story; if(mode!=='endless') mix=false;
   if(story){ themeKey=story.theme; }
@@ -1111,20 +1177,38 @@ function paintBlock(g,px,py,w,col,fx=THEME.fx,glow=1){
   }
 }
 // Anker- und Riss-Symbole auf Kacheln
-function mark(x,y,fl){
-  if(!fl)return;
-  const cx=x*CELL+CELL/2, cy=y*CELL+CELL/2;
-  ctx.save(); ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=Math.max(1.5,CELL*.07); ctx.lineCap='round';
+function mark(x,y,fl){ if(fl&(FLAG_A|FLAG_C|PUP_MASK)) markOn(ctx,x*CELL+CELL/2,y*CELL+CELL/2,CELL,fl); }
+// Symbole auf Kacheln: Anker, Riss, Sprengstein, Magnet, Frost, Doppel-Ladung (Brett und Vorschau)
+function markOn(g,cx,cy,S,fl){
+  g.save(); g.strokeStyle='rgba(0,0,0,.55)'; g.fillStyle='rgba(0,0,0,.55)'; g.lineWidth=Math.max(1.5,S*.07); g.lineCap='round'; g.lineJoin='round';
   if(fl&FLAG_A){
-    ctx.beginPath(); ctx.arc(cx,cy-CELL*.24,CELL*.07,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx,cy-CELL*.17); ctx.lineTo(cx,cy+CELL*.24); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-CELL*.14,cy-CELL*.06); ctx.lineTo(cx+CELL*.14,cy-CELL*.06); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx,cy+CELL*.02,CELL*.22,Math.PI*.18,Math.PI*.82); ctx.stroke();
+    g.beginPath(); g.arc(cx,cy-S*.24,S*.07,0,Math.PI*2); g.stroke();
+    g.beginPath(); g.moveTo(cx,cy-S*.17); g.lineTo(cx,cy+S*.24); g.stroke();
+    g.beginPath(); g.moveTo(cx-S*.14,cy-S*.06); g.lineTo(cx+S*.14,cy-S*.06); g.stroke();
+    g.beginPath(); g.arc(cx,cy+S*.02,S*.22,Math.PI*.18,Math.PI*.82); g.stroke();
   }
   if(fl&FLAG_C){
-    ctx.beginPath(); ctx.moveTo(cx-CELL*.3,cy-CELL*.3); ctx.lineTo(cx-CELL*.05,cy-CELL*.05); ctx.lineTo(cx-CELL*.15,cy+CELL*.08); ctx.lineTo(cx+CELL*.3,cy+CELL*.3); ctx.stroke();
+    g.beginPath(); g.moveTo(cx-S*.3,cy-S*.3); g.lineTo(cx-S*.05,cy-S*.05); g.lineTo(cx-S*.15,cy+S*.08); g.lineTo(cx+S*.3,cy+S*.3); g.stroke();
   }
-  ctx.restore();
+  if(fl&FLAG_B){ // Bombe: Kugel mit Zündschnur und Funke
+    g.beginPath(); g.arc(cx-S*.03,cy+S*.06,S*.19,0,Math.PI*2); g.fill();
+    g.beginPath(); g.moveTo(cx+S*.08,cy-S*.1); g.quadraticCurveTo(cx+S*.2,cy-S*.2,cx+S*.26,cy-S*.3); g.stroke();
+    g.fillStyle='#FFD23F'; g.beginPath(); g.arc(cx+S*.27,cy-S*.31,S*.06,0,Math.PI*2); g.fill();
+  }
+  if(fl&FLAG_M){ // Magnet: U mit zwei Polen
+    g.lineWidth=Math.max(2,S*.11); g.beginPath(); g.arc(cx,cy-S*.04,S*.2,Math.PI,0); g.moveTo(cx-S*.2,cy-S*.04); g.lineTo(cx-S*.2,cy+S*.22); g.moveTo(cx+S*.2,cy-S*.04); g.lineTo(cx+S*.2,cy+S*.22); g.stroke();
+    g.strokeStyle='#FF5E5B'; g.beginPath(); g.moveTo(cx-S*.2,cy+S*.12); g.lineTo(cx-S*.2,cy+S*.22); g.moveTo(cx+S*.2,cy+S*.12); g.lineTo(cx+S*.2,cy+S*.22); g.stroke();
+  }
+  if(fl&FLAG_F){ // Frost: Schneeflocke
+    g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=Math.max(1.5,S*.06);
+    for(let k=0;k<3;k++){ const a=k*Math.PI/3; g.beginPath(); g.moveTo(cx-Math.cos(a)*S*.28,cy-Math.sin(a)*S*.28); g.lineTo(cx+Math.cos(a)*S*.28,cy+Math.sin(a)*S*.28); g.stroke(); }
+    g.fillStyle='rgba(255,255,255,.9)'; g.beginPath(); g.arc(cx,cy,S*.06,0,Math.PI*2); g.fill();
+  }
+  if(fl&FLAG_D){ // Doppel-Ladung: Blitz
+    g.fillStyle='rgba(0,0,0,.6)'; g.beginPath(); g.moveTo(cx+S*.08,cy-S*.32); g.lineTo(cx-S*.16,cy+S*.04); g.lineTo(cx-S*.01,cy+S*.04); g.lineTo(cx-S*.08,cy+S*.32); g.lineTo(cx+S*.16,cy-S*.04); g.lineTo(cx+S*.01,cy-S*.04); g.closePath(); g.fill();
+    g.fillStyle='#FFD23F'; g.beginPath(); g.moveTo(cx+S*.06,cy-S*.27); g.lineTo(cx-S*.11,cy+S*.01); g.lineTo(cx,cy+S*.01); g.lineTo(cx-S*.06,cy+S*.27); g.lineTo(cx+S*.11,cy-S*.01); g.lineTo(cx,cy-S*.01); g.closePath(); g.fill();
+  }
+  g.restore();
 }
 // Schatten: nur eine feine Kontur, damit er nicht mit echten Kacheln konkurriert
 function ghost(x,y,col){
@@ -1156,11 +1240,13 @@ function draw(){
   drawFx();
   drawGhost();
   if(cur){
-    let gy=cur.y; while(!hits(cur.m,cur.x,gy+1))gy++;
+    let gy=cur.y; if(cur.ghost) gy=Math.max(cur.y,ghostTarget(cur.m,cur.x)); else while(!hits(cur.m,cur.x,gy+1))gy++;
+    if(cur.ghost) ctx.globalAlpha=.6;
     cur.m.forEach((row,r)=>row.forEach((v,c)=>{ if(v){
       ghost(cur.x+c,gy+r,COLORS[cur.col]);
       if(cur.y+r>=0){ cell(cur.x+c,cur.y+r,COLORS[cur.col],1.4,'cur',matFx(cur.f[r][c])); mark(cur.x+c,cur.y+r,cur.f[r][c]); }
     }}));
+    ctx.globalAlpha=1;
   }
   drawPopups();
   if(toast){

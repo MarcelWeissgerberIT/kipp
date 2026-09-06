@@ -11,6 +11,15 @@ Three materials change the rules, not just the look:
 
 Modes: Endless (4 board sizes, optional material mix, gets 6 % faster every 30 s on top of the level speed), Daily board with ghost replay, 30 Story levels with stars, 5 Challenge boards. Arcade-style initials, local highscores and an optional online world leaderboard, pause and back-to-menu at any time, shareable result card (PNG), EN/DE.
 
+## Power-up pieces
+About every seventh piece carries a power-up (not in the tutorial). Anchors and cracks still exist alongside them.
+- **Bomb** (fuse icon) – when its row clears, the eight neighbouring cells go with it.
+- **Magnet** (U icon) – when the board tips, it welds every touching body to its own. One use.
+- **Frost** (snowflake) – clearing its row freezes the quake bar for 10 seconds.
+- **Charge** (lightning bolt) – clearing its row refills two tip charges instead of one.
+- **Ghost** (translucent, dashed) – the whole piece falls through everything to the lowest free spot. Sideways moves are only allowed where a free spot exists below.
+- **Jelly bounce** – a jelly body that falls three or more cells after a tip hops back up one cell and stays there. Jelly only, also for jelly pieces in the material mix.
+
 ## Controls
 Touch: tap beside the piece to move, tap it to rotate, swipe down to drop, drag to slide. Cross: blue corners tip the board, green corners switch material / fast-fall.
 Keyboard: ← → move · ↑ rotate · ↓ fast · Space drop · Q/E tip · T material · Esc/P pause.
