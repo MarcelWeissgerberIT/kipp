@@ -812,7 +812,7 @@ function hsSave(name){ const all=hsLoad(); const l=all[hsKey()]||[]; l.push({nam
 function renderIni(){ ini.forEach((v,i)=>document.getElementById('ini'+i).textContent=HS_CHARS[v]); }
 // Online-Bestenliste (optional). Supabase-Projekt anlegen, supabase/highscores.sql ausführen,
 // dann hier Project-URL und anon key eintragen. Bleibt beides leer, gibt es nur die lokale Liste.
-const ONLINE={url:'',key:'',table:'highscores'};
+const ONLINE={url:'https://ebsjrhgftwqscmmbnsfq.supabase.co',key:'',table:'highscores'};
 const onlineOn=()=>!!(ONLINE.url&&ONLINE.key);
 let hsView='local', hsMineT=null, worldCache={}, worldMine=null;
 try{ if(localStorage.getItem('kipp-hsview')==='world') hsView='world'; }catch(e){}
