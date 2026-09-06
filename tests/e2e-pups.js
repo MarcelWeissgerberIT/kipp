@@ -52,6 +52,6 @@ const {ok,fails}=checker();
   ok(await page.evaluate(()=>{ mode='tutorial'; for(let i=0;i<500;i++){ if(makePiece().f.flat().reduce((a,v)=>a|v,0)&PUP_MASK) return false; } mode='endless'; return true; }),'no power-ups in the tutorial');
   ok(errors.length===0,'no page errors'+(errors.length?': '+errors.join(' | '):''));
   await reset(); await page.evaluate(()=>{ themeKey='jelly'; applyTheme(); const set=(x,y,c,f)=>{ grid[y][x]=c; ids[y][x]=pieceId++; flags[y][x]=f; }; set(1,11,1,FLAG_A); set(2,11,2,FLAG_C); set(3,11,3,FLAG_B); set(4,11,4,FLAG_M); set(5,11,5,FLAG_F); set(6,11,6,FLAG_D); cur={m:[[1,1],[1,1]],f:[[FLAG_G,FLAG_G],[FLAG_G,FLAG_G]],col:4,x:8,y:8,ghost:true}; next={i:2,f:[[FLAG_G,FLAG_G],[FLAG_G,FLAG_G]]}; draw(); });
-  await page.waitForTimeout(200); await page.screenshot({path:'pups.png',clip:{x:330,y:140,width:440,height:530}});
+  await page.waitForTimeout(200);
   await browser.close(); server.close(); if(fails.length) process.exit(1);
 })().catch(e=>{ console.error(e); process.exit(1); });

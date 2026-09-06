@@ -26,7 +26,6 @@ const {ok,fails}=checker();
   await page.evaluate(()=>{ pause(); quitToMenu(); }); await page.click('#modes [data-m="endless"]'); await page.click('#shapes [data-sh="ext"]'); await page.click('#startBtn'); await page.waitForTimeout(150);
   ok(await page.evaluate(()=>SHAPES.every(m=>cellsOf(m)>=4&&cellsOf(m)<=8)&&Math.abs(mult-1.5*1.3)<1e-9),'extended run: only 4–8 block shapes, multiplier 1.3');
   await page.evaluate(()=>{ pause(); quitToMenu(); }); await page.click('#shapes [data-sh="std"]'); await page.waitForTimeout(100);
-  await page.screenshot({path:'shapes.png',clip:{x:340,y:440,width:420,height:260}});
   ok(errors.length===0,'no page errors'+(errors.length?': '+errors.join(' | '):''));
   await browser.close(); server.close(); if(fails.length) process.exit(1);
 })().catch(e=>{ console.error(e); process.exit(1); });
