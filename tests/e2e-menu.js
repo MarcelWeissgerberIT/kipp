@@ -61,6 +61,7 @@ const {ok,fails}=checker();
   const man=await page.evaluate(async()=>{ const r=await fetch('manifest.webmanifest'); const m=await r.json(); return {name:m.short_name,icons:m.icons.length,link:!!document.querySelector('link[rel=manifest]')}; });
   ok(man.name==='Kipp'&&man.icons===3&&man.link,'manifest served and linked');
   ok(await page.evaluate(async()=>(await fetch('sw.js')).ok&&(await fetch('icon-192.png')).ok&&(await fetch('icon-512.png')).ok),'service worker and icons are served');
+  ok(await page.evaluate(async()=>{ const m=n=>document.querySelector(`meta[property="${n}"]`)?.content||''; return m('og:title').startsWith('Kipp')&&m('og:image').endsWith('/kipp/og.png')&&m('og:url')==='https://marcelweissgerberit.github.io/kipp/'&&document.querySelector('meta[name="twitter:card"]').content==='summary_large_image'&&(await fetch('og.png')).ok; }),'Open Graph and Twitter card tags with a served preview image');
   // landscape phone layout
   const land=await browser.newPage({viewport:{width:844,height:390}}); await land.goto(U); await land.waitForTimeout(300);
   const L=await land.evaluate(()=>{ const b=cv.getBoundingClientRect(), d=document.querySelector('.dpad').getBoundingClientRect(); return {board:Math.round(b.width),dpadRight:d.left>b.right,scrollH:document.documentElement.scrollHeight}; });
