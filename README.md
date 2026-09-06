@@ -9,7 +9,7 @@ Three materials change the rules, not just the look:
 - **Stone** – heavy, falls faster, never tears, anchors itself
 - **Metal** – magnetic: touching pieces weld together when the board tips
 
-Modes: Endless (4 board sizes, optional material mix), Daily board with ghost replay, 30 Story levels with stars, 5 Challenge boards. Every mode gets 6 % faster every 30 s of play on top of the level speed. Arcade-style initials, local highscores and an optional online world leaderboard, pause and back-to-menu at any time, shareable result card (PNG), EN/DE.
+Modes: Endless (4 board sizes, three shape sets: Standard 3–5 blocks, Extended 4–8 blocks at 1.3×, Ultra 4–16 blocks at 1.6×, optional material mix), Daily board with ghost replay, 30 Story levels with stars, 5 Challenge boards. Every mode gets 6 % faster every 30 s of play on top of the level speed. Arcade-style initials, local highscores and an optional online world leaderboard, pause and back-to-menu at any time, shareable result card (PNG), EN/DE.
 
 ## Power-up pieces
 About every seventh piece carries a power-up (not in the tutorial). Anchors and cracks still exist alongside them.
