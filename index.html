@@ -628,9 +628,9 @@ const SFX={
   over:()=>{ [0,-3,-7,-12].forEach((st,i)=>tone(330*Math.pow(2,st/12),330*Math.pow(2,st/12)*.98,.35,'triangle',.4,i*.22)); },
 };
 let lastCharges=-1, combo=0, comboAt=0, bestCombo=1, endSnap=null, lastStars=0;
-// Tempo: in Endlos und Tagesbrett alle 30 s reine Spielzeit 6 % schneller, unabhängig vom Level
+// Tempo: in jedem Modus außer Tutorial alle 30 s reine Spielzeit 6 % schneller, unabhängig vom Level
 let speedT0=0, speedStep=0;
-const tempo=()=>(mode==='endless'||mode==='daily')?Math.pow(.94,speedStep):1;
+const tempo=()=>mode==='tutorial'?1:Math.pow(.94,speedStep);
 function tempoTick(){
   if(tut)return; const st=Math.floor((performance.now()-speedT0)/30000); if(st===speedStep)return;
   speedStep=st; restartTimer();
