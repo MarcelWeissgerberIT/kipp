@@ -2,7 +2,7 @@
 
 ▶ **Play:** https://marcelweissgerberit.github.io/kipp/
 
-Falling blocks – but the board itself can tip 90°. Every placed piece is a rigid body: whatever isn't resting on something falls. Every so often the board quakes and tips on its own.
+Falling blocks – but the board itself can tip 90°. Every placed piece is a rigid body: whatever isn't resting on something falls. Every so often a timer runs out and the board tips on its own (the auto-tip).
 
 Three materials change the rules, not just the look:
 - **Jelly** – wobbly, tears easily, chains score ×3
@@ -15,7 +15,7 @@ Modes: Endless (4 board sizes, optional material mix), Daily board with ghost re
 About every seventh piece carries a power-up (not in the tutorial). Anchors and cracks still exist alongside them.
 - **Bomb** (fuse icon) – when its row clears, the eight neighbouring cells go with it.
 - **Magnet** (U icon) – when the board tips, it welds every touching body to its own. One use.
-- **Frost** (snowflake) – clearing its row freezes the quake bar for 10 seconds.
+- **Frost** (snowflake) – clearing its row freezes the auto-tip timer for 10 seconds.
 - **Charge** (lightning bolt) – clearing its row refills two tip charges instead of one.
 - **Ghost** (translucent, dashed) – the whole piece falls through everything to the lowest free spot. Sideways moves are only allowed where a free spot exists below.
 - **Jelly bounce** – a jelly body that falls three or more cells after a tip hops back up one cell and stays there. Jelly only, also for jelly pieces in the material mix.

@@ -233,7 +233,7 @@
   <div class="danger" id="danger"></div>
   <div class="hint" id="hint" hidden><p id="hintText"></p><button id="hintBtn" class="toggle"></button></div>
 </div>
-  <div class="quakerow" id="quakeRow"><div class="quakebar" role="progressbar" aria-label="Zeit bis zum Beben" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="quakeBar"><i id="quakeFill"></i></div><b class="qicon" id="quakeIcon">〰</b></div>
+  <div class="quakerow" id="quakeRow"><div class="quakebar" role="progressbar" aria-label="Zeit bis zum Auto-Kipp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="quakeBar"><i id="quakeFill"></i></div><b class="qicon" id="quakeIcon">〰</b></div>
 </div>
 
 <div class="charges" id="charges"><span class="lbl" id="lblCharge">Tip charge</span><span class="bat" id="bat"><i></i><i></i><i></i><i></i><i></i><u></u></span></div>
@@ -316,13 +316,13 @@ const seedOf=str=>[...str].reduce((h,ch)=>Math.imul(h^ch.charCodeAt(0),16777619)
 const SIZES=[[14,1],[12,1.5],[10,2],[8,3]];
 const I18N={
   en:{intro:'Falling blocks – but the board tips. Everything that is not resting falls.',
-    sizes:['Wide','Normal','Tight','Brutal'],modes:['Endless','Daily','Story','Challenges'],quakeOn:'Quakes on',quakeOff:'Quakes off',
-    dailyNote:'Same pieces, same quakes for everyone – today on 12×12.',share:'Share result',copied:'Copied',play:'Play',again:'Again',
+    sizes:['Wide','Normal','Tight','Brutal'],modes:['Endless','Daily','Story','Challenges'],quakeOn:'Auto-tip on',quakeOff:'Auto-tip off',
+    dailyNote:'Same pieces, same auto-tips for everyone – today on 12×12.',share:'Share result',copied:'Copied',play:'Play',again:'Again',
     over:'Game over',cleared:'Cleared!',daily:'Daily board',chain:'Chain',rows:'rows',
-    overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} quakes survived.`,
-    winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} quakes. Try it with fewer tips?`,
-    shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} quakes`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the quake',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Quake frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. Quakes and the bar wait with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Quakes',lblCombo:'Combo',
+    overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} auto-tips survived.`,
+    winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} auto-tips. Try it with fewer tips?`,
+    shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} auto-tips`,
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Kipps the board after timeout',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pupBomb:'Bomb piece',pupMagnet:'Magnet piece',pupFrost:'Frost piece',pupCharge:'Charge piece',pupGhost:'Ghost piece',hintBomb:'clears its neighbours',hintMagnet:'welds when the board tips',hintFrost:'freezes the auto-tip timer',hintCharge:'double tip charge',hintGhost:'falls through everything',boom:'Boom!',frozen:'Auto-tip frozen 10 s',charge2:'+2 charge',welded:'Welded!',boing:'Boing!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. The auto-tip timer waits with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Auto-tips',lblCombo:'Combo',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -331,17 +331,17 @@ const I18N={
       'The trick: press the blue top-LEFT key on the cross to tip the board. Everything that is not resting falls.',
       'Rows that only complete after a tip count as a chain: ×3 in Jelly, then ×9.',
       'Tipping costs a charge (the blue dots). Every full row refills one.',
-      'The bar under the board fills up. When it is full, the board quakes by itself. Tipping yourself resets it.',
+      'The bar under the board fills up. When it is full, the board tips by itself. Tipping yourself resets it.',
       'That is all. Anchors, cracks, materials and power-up pieces you will discover while playing.'],
-    tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material'],['Esc / P','Pause']],quakeBar:'Time until the quake',size:'Board size',mute:'Sound off',unmute:'Sound on'},
+    tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material'],['Esc / P','Pause']],quakeBar:'Time until the auto-tip',size:'Board size',mute:'Sound off',unmute:'Sound on'},
   de:{intro:'Fallende Steine – aber das Brett kippt. Alles, was nicht aufliegt, fällt.',
-    sizes:['Weit','Normal','Eng','Brutal'],modes:['Endlos','Tagesbrett','Story','Challenges'],quakeOn:'Beben an',quakeOff:'Beben aus',
-    dailyNote:'Gleiche Steine, gleiche Beben für alle – heute auf 12×12.',share:'Ergebnis teilen',copied:'Kopiert',play:'Spielen',again:'Nochmal',
+    sizes:['Weit','Normal','Eng','Brutal'],modes:['Endlos','Tagesbrett','Story','Challenges'],quakeOn:'Auto-Kipp an',quakeOff:'Auto-Kipp aus',
+    dailyNote:'Gleiche Steine, gleiche Auto-Kipps für alle – heute auf 12×12.',share:'Ergebnis teilen',copied:'Kopiert',play:'Spielen',again:'Nochmal',
     over:'Vorbei',cleared:'Geschafft!',daily:'Tagesbrett',chain:'Kette',rows:'Reihen',
-    overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Beben überstanden.`,
-    winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Beben. Schaffst du es mit weniger Kipps?`,
-    shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Beben`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert das Beben ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Beben 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Beben und Balken warten mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Beben',lblCombo:'Kombo',
+    overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Auto-Kipps überstanden.`,
+    winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Auto-Kipps. Schaffst du es mit weniger Kipps?`,
+    shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Auto-Kipps`,
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Kippt das Board nach Zeituhr',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pupBomb:'Sprengstein',pupMagnet:'Magnetstein',pupFrost:'Froststein',pupCharge:'Ladestein',pupGhost:'Geisterstein',hintBomb:'räumt seine Nachbarn',hintMagnet:'schweißt beim Kippen',hintFrost:'friert die Zeituhr ein',hintCharge:'doppelte Kipp-Ladung',hintGhost:'fällt durch alles',boom:'Boom!',frozen:'Auto-Kipp 10 s eingefroren',charge2:'+2 Ladung',welded:'Verschweißt!',boing:'Boing!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Die Zeituhr wartet mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Auto-Kipps',lblCombo:'Kombo',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -350,19 +350,19 @@ const I18N={
       'Der Trick: Drück die blaue Taste oben LINKS am Kreuz und kipp das Brett. Alles, was nicht aufliegt, fällt.',
       'Reihen, die erst nach dem Kippen voll werden, zählen als Kette: ×3 bei Gelee, dann ×9.',
       'Kippen kostet eine Ladung (die blauen Punkte). Jede volle Reihe füllt eine nach.',
-      'Der Balken unter dem Brett läuft voll. Ist er voll, bebt das Brett von selbst. Selber kippen setzt ihn zurück.',
+      'Der Balken unter dem Brett läuft voll. Ist er voll, kippt das Brett von selbst. Selber kippen setzt ihn zurück.',
       'Das war alles. Anker, Risse, Materialien und Power-up-Steine entdeckst du beim Spielen.'],
-    tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material'],['Esc / P','Pause']],quakeBar:'Zeit bis zum Beben',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
+    tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material'],['Esc / P','Pause']],quakeBar:'Zeit bis zum Auto-Kipp',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
 };
 // Sprüche beim Auflösen, nach Reihenzahl / Kette / Kipp / Ende
 const QUIPS={
   en:{1:['Clean.','Tidy.','One down.','Neat.'],2:['Double!','Two for one.','Stacked.'],3:['Triple!','Now we\'re talking.','Heavy.'],4:['FULL HOUSE!','Absolute unit.','Bottom\'s out!'],
     chain:['Chain reaction!','Domino!','Gravity approves.','It keeps going!','Physics says yes.'],
-    tip:['Timber!','Everything falls.','Hold on tight.','Whoa.'],quake:['Quake!','The ground moves.','Not your call.'],
+    tip:['Timber!','Everything falls.','Hold on tight.','Whoa.'],quake:['Auto-tip!','The ground moves.','Not your call.'],
     over:['The board won.','Gravity always wins.','Buried.','Next time, tip earlier.'],win:['Cleared!','Nailed it.','Board conquered.']},
   de:{1:['Sauber.','Ordentlich.','Eine weg.','Passt.'],2:['Doppelt!','Zwei auf einmal.','Gestapelt.'],3:['Dreifach!','Jetzt geht\'s los.','Wuchtig.'],4:['VOLLES HAUS!','Brett frei!','Boden raus!'],
     chain:['Kettenreaktion!','Domino!','Schwerkraft sagt Danke.','Und weiter!','Physik läuft.'],
-    tip:['Holz!','Alles fällt.','Festhalten.','Uff.'],quake:['Beben!','Der Boden lebt.','Nicht deine Entscheidung.'],
+    tip:['Holz!','Alles fällt.','Festhalten.','Uff.'],quake:['Auto-Kipp!','Der Boden lebt.','Nicht deine Entscheidung.'],
     over:['Das Brett hat gewonnen.','Schwerkraft gewinnt immer.','Verschüttet.','Nächstes Mal früher kippen.'],win:['Geschafft!','Sitzt.','Brett bezwungen.']},
 };
 const quip=k=>{ const a=QUIPS[lang][k]||QUIPS.en[k]; return a[Math.floor(Math.random()*a.length)]; };
@@ -406,7 +406,7 @@ const CHALLENGES=[
    setup(){ const id=pieceId++; for(let y=1;y<N;y++)for(let x=0;x<2;x++){ grid[y][x]=2+(y%2); ids[y][x]=id; } }},
   {id:'anchors',N:12,goal:8,charges:3,name:{en:'Anchor Field',de:'Ankerfeld'},desc:{en:'Seven anchors are scattered and never move. Clear 8 rows.',de:'Sieben Anker liegen verstreut und rühren sich nicht. Räume 8 Reihen.'},
    setup(){ let n=0; while(n<7){ const y=5+Math.floor(rnd()*7), x=Math.floor(rnd()*N); if(grid[y][x])continue; grid[y][x]=1+Math.floor(rnd()*8); ids[y][x]=pieceId++; flags[y][x]=FLAG_A; n++; } }},
-  {id:'storm',N:12,goal:10,charges:2,quakeMs:12000,name:{en:'Storm',de:'Sturm'},desc:{en:'The board quakes every 12 seconds. Survive 10 rows.',de:'Das Brett bebt alle 12 Sekunden. Überstehe 10 Reihen.'},setup(){}},
+  {id:'storm',N:12,goal:10,charges:2,quakeMs:12000,name:{en:'Storm',de:'Sturm'},desc:{en:'The board tips itself every 12 seconds. Survive 10 rows.',de:'Das Brett kippt alle 12 Sekunden von selbst. Überstehe 10 Reihen.'},setup(){}},
   {id:'cramped',N:8,goal:4,charges:2,name:{en:'Cramped',de:'Enge'},desc:{en:'8×8, rubble in the corners. Clear 4 rows.',de:'8×8, Schutt in den Ecken. Räume 4 Reihen.'},
    setup(){ for(let y=4;y<N;y++)for(let x=0;x<N;x++) if((x<3||x>N-4)&&rnd()<.7){ grid[y][x]=1+Math.floor(rnd()*8); ids[y][x]=pieceId++; } }},
 ];
@@ -1319,7 +1319,7 @@ function renderModes(){
   document.getElementById('storyBox').hidden=mode!=='story'; document.getElementById('matSec').hidden=mode==='story';
   if(mode==='story'){
     document.getElementById('chapters').innerHTML=STORY_CH.map((k,i)=>`<button role="radio" aria-checked="${storyCh===i}" data-ch="${i}" ${storyUnlocked(i,0)?'':'disabled'}><i class="sw-${k}"></i>${THEMES[k].name[lang]}</button>`).join('');
-    const lv=storyLevel(storyCh,storyLv); document.getElementById('storyNote').textContent=`${lv.desc[lang]} ${lv.quakeMs?(lang==='de'?'Beben alle '+lv.quakeMs/1000+' s.':'Quakes every '+lv.quakeMs/1000+' s.'):''} ${lv.N}×${lv.N}.`;
+    const lv=storyLevel(storyCh,storyLv); document.getElementById('storyNote').textContent=`${lv.desc[lang]} ${lv.quakeMs?(lang==='de'?'Auto-Kipp alle '+lv.quakeMs/1000+' s.':'Auto-tip every '+lv.quakeMs/1000+' s.'):''} ${lv.N}×${lv.N}.`;
     document.getElementById('levels').innerHTML=Array.from({length:10},(_,l)=>{ const st=storyStars(storyCh,l), un=storyUnlocked(storyCh,l); return `<button role="radio" aria-checked="${storyLv===l}" data-lv="${l}" ${un?'':'disabled'}>${l+1}<small>${st?'★'.repeat(st):(un?'·':'🔒')}</small></button>`; }).join('');
   }
 }
@@ -1375,7 +1375,7 @@ function shareCard(modeLabel){
   snap.forEach((row,yy)=>row.forEach((v,xx)=>{ if(!v)return; const col=COLORS[v]; x.save(); x.shadowColor=col; x.shadowBlur=THEME.fx==='jelly'?12:4; x.fillStyle=col; x.beginPath(); x.roundRect(bx+xx*cs+2,by+yy*cs+2,cs-4,cs-4,THEME.fx==='jelly'?cs*.3:cs*.12); x.fill(); x.restore();
     x.fillStyle='rgba(255,255,255,.35)'; x.fillRect(bx+xx*cs+cs*.2,by+yy*cs+4,cs*.6,cs*.12); }));
   x.fillStyle='#FFD23F'; x.shadowColor='#FFD23F'; x.shadowBlur=30; x.font='bold 110px Bungee,Nunito,sans-serif'; x.fillText(String(score),W/2,by+bs+130); x.shadowBlur=0;
-  x.fillStyle='rgba(237,232,220,.8)'; x.font='700 28px Nunito,sans-serif'; x.fillText(`${lines} ${T().rows} · ${tipsUsed} ${lang==='de'?'Kipps':'tips'} · ${quakes} ${lang==='de'?'Beben':'quakes'} · ${THEME.name[lang]}`,W/2,by+bs+180);
+  x.fillStyle='rgba(237,232,220,.8)'; x.font='700 28px Nunito,sans-serif'; x.fillText(`${lines} ${T().rows} · ${tipsUsed} ${lang==='de'?'Kipps':'tips'} · ${quakes} ${lang==='de'?'Auto-Kipps':'auto-tips'} · ${THEME.name[lang]}`,W/2,by+bs+180);
   return c;
 }
 document.getElementById('shareBtn').addEventListener('click',async()=>{
