@@ -9,14 +9,24 @@ Three materials change the rules, not just the look:
 - **Stone** – heavy, falls faster, never tears, anchors itself
 - **Metal** – magnetic: touching pieces weld together when the board tips
 
-Modes: Endless (4 board sizes, optional material mix), Daily board with ghost replay, 30 Story levels with stars, 5 Challenge boards. Arcade-style initials and local highscores, shareable result card (PNG), EN/DE.
+Modes: Endless (4 board sizes, optional material mix), Daily board with ghost replay, 30 Story levels with stars, 5 Challenge boards. Arcade-style initials, local highscores and an optional online world leaderboard, pause and back-to-menu at any time, shareable result card (PNG), EN/DE.
 
 ## Controls
 Touch: tap beside the piece to move, tap it to rotate, swipe down to drop, drag to slide. Cross: blue corners tip the board, green corners switch material / fast-fall.
-Keyboard: ← → move · ↑ rotate · ↓ fast · Space drop · Q/E tip · T material.
+Keyboard: ← → move · ↑ rotate · ↓ fast · Space drop · Q/E tip · T material · Esc/P pause.
+
+## Online highscores (optional)
+Out of the box, highscores live in the browser's localStorage. To get a shared world leaderboard, plug in a free [Supabase](https://supabase.com) project as a mini database:
+
+1. Create a Supabase project, open **SQL Editor** and run `supabase/highscores.sql`. It creates the `highscores` table with row-level security: anyone can read and insert, nobody can update or delete.
+2. In **Project Settings → API** copy the *Project URL* and the *anon public* key.
+3. In `index.html` search for `const ONLINE=` and fill in `url` and `key`.
+4. Commit and push – the end screen now shows a **This device / World** switch, and saving your initials also submits the run to the world list (top 10 per mode and board size, plus your worldwide rank).
+
+The anon key is meant to be public; the SQL policies are what protect the data. Scores are submitted by the client, so treat the world list as a friendly board, not an anti-cheat system.
 
 ## Tech
-One `index.html`. No framework, no build, no assets. Canvas rendering, WebAudio synth for music and SFX, localStorage for progress. Built in a chat with Claude (~35 iterations).
+One `index.html`. No framework, no build, no assets. Canvas rendering, WebAudio synth for music and SFX, localStorage for progress, optional Supabase REST for the world leaderboard. Built in a chat with Claude (~35 iterations).
 
 ## Run locally
 Open `index.html` in a browser. That's it.

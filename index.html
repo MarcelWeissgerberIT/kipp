@@ -49,6 +49,10 @@
   .hs li{display:grid;grid-template-columns:1.4em 3.2em 1fr auto;gap:8px;padding:4px 8px;border-radius:6px;background:rgba(237,232,220,.06)}
   .hs li.me{background:rgba(255,210,63,.18);color:var(--ochre)}
   .hs li span:last-child{color:var(--dim);font-weight:600}
+  .hs li.info{display:block;text-align:center;color:var(--dim);font-weight:600;background:none;padding:6px}
+  .hs li.info.me{color:var(--ochre)}
+  .seg.hsTabs{grid-template-columns:1fr 1fr;width:100%}
+  .seg.hsTabs button{min-height:36px;font-size:.8rem}
   .mute{height:44px;width:44px;background:transparent;box-shadow:none;align-self:center;opacity:.7}
   .mute svg{width:24px;height:24px}
   .mute .x{display:none}
@@ -175,6 +179,7 @@
     <span><b id="level">1</b></span>
     <span><canvas id="next" width="48" height="48" style="display:block;margin-top:2px"></canvas></span>
     <button id="muteBtn" class="mute" aria-label="Ton aus" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="w" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="x" d="M17 9l5 5M22 9l-5 5"/></svg></button>
+    <button id="pauseBtn" class="mute" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 5v14"/><path d="M16 5v14"/></svg></button>
   </div>
 </header>
 
@@ -201,6 +206,12 @@
   <button data-a="drop" class="down" aria-label="Drop"><svg viewBox="0 0 24 24"><path d="M12 3v14"/><path d="M6 11l6 6 6-6"/><path d="M5 21h14"/></svg></button>
 </div>
   </div>
+<div class="overlay" id="pov">
+  <h2>Pause</h2>
+  <p id="povText" class="tagline"></p>
+  <button class="start" id="resumeBtn"></button>
+  <button id="quitBtn" class="toggle"></button>
+</div>
 <div class="overlay show" id="ov">
   <button id="langBtn" class="mute lang" aria-label="Language">DE</button>
   <h2 id="ovTitle">Kipp</h2>
@@ -213,6 +224,7 @@
       <div class="slot"><button data-d="1" data-i="2">▲</button><b id="ini2">A</b><button data-d="-1" data-i="2">▼</button></div>
       <button class="start ok" id="saveBtn">OK</button>
     </div>
+    <div class="seg hsTabs" id="hsTabs" role="radiogroup" hidden><button data-s="local" aria-checked="true"></button><button data-s="world" aria-checked="false"></button></div>
     <ol class="hs" id="hsList"></ol>
     <button id="menuBtn" class="toggle"></button>
   </div>
@@ -256,7 +268,7 @@ const I18N={
     overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} quakes survived.`,
     winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} quakes. Try it with fewer tips?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} quakes`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseText:'Everything holds still. The board stays as it is.',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -267,7 +279,7 @@ const I18N={
       'Tipping costs a charge (the blue dots). Every full row refills one.',
       'The bar under the board fills up. When it is full, the board quakes by itself. Tipping yourself resets it.',
       'That is all. Anchors, cracks and materials you will discover while playing.'],
-    tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material']],quakeBar:'Time until the quake',size:'Board size',mute:'Sound off',unmute:'Sound on'},
+    tipL:'Tip board left',tipR:'Tip board right',left:'Left',right:'Right',rot:'Rotate piece',drop:'Drop',theme:'Switch material',soft:'Fall faster',keys:[['← →','Move'],['↑','Rotate'],['↓','Fall faster'],['Space','Drop'],['Q / E','Tip board'],['T','Material'],['Esc / P','Pause']],quakeBar:'Time until the quake',size:'Board size',mute:'Sound off',unmute:'Sound on'},
   de:{intro:'Fallende Steine – aber das Brett kippt. Alles, was nicht aufliegt, fällt.',
     sizes:['Weit','Normal','Eng','Brutal'],modes:['Endlos','Tagesbrett','Story','Challenges'],quakeOn:'Beben an',quakeOff:'Beben aus',
     dailyNote:'Gleiche Steine, gleiche Beben für alle – heute auf 12×12.',share:'Ergebnis teilen',copied:'Kopiert',play:'Spielen',again:'Nochmal',
@@ -275,7 +287,7 @@ const I18N={
     overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Beben überstanden.`,
     winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Beben. Schaffst du es mit weniger Kipps?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Beben`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseText:'Alles steht still. Das Brett bleibt, wie es ist.',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -286,7 +298,7 @@ const I18N={
       'Kippen kostet eine Ladung (die blauen Punkte). Jede volle Reihe füllt eine nach.',
       'Der Balken unter dem Brett läuft voll. Ist er voll, bebt das Brett von selbst. Selber kippen setzt ihn zurück.',
       'Das war alles. Anker, Risse und Materialien entdeckst du beim Spielen.'],
-    tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material']],quakeBar:'Zeit bis zum Beben',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
+    tipL:'Brett nach links kippen',tipR:'Brett nach rechts kippen',left:'Links',right:'Rechts',rot:'Stein drehen',drop:'Fallen lassen',theme:'Material wechseln',soft:'Schneller fallen',keys:[['← →','Bewegen'],['↑','Drehen'],['↓','Schneller'],['Leertaste','Fallen lassen'],['Q / E','Brett kippen'],['T','Material'],['Esc / P','Pause']],quakeBar:'Zeit bis zum Beben',size:'Spielfeldgröße',mute:'Ton aus',unmute:'Ton an'},
 };
 // Sprüche beim Auflösen, nach Reihenzahl / Kette / Kipp / Ende
 const QUIPS={
@@ -546,7 +558,7 @@ let lastCharges=-1, combo=0, comboAt=0, endSnap=null, lastStars=0;
 let ghostRun=null, rec=null, recTimer=null, runStart=0;
 const ghostKey=()=>'kipp-ghost-'+dayKey();
 function ghostLoad(){ try{ const g=JSON.parse(localStorage.getItem(ghostKey())||'null'); return g; }catch(e){ return null; } }
-function recStart(){ rec=[]; runStart=performance.now(); clearInterval(recTimer); recTimer=setInterval(()=>{ if(alive) rec.push(grid.map(r=>r.join('')).join('')); },500); ghostRun=ghostLoad(); }
+function recStart(){ rec=[]; runStart=performance.now(); clearInterval(recTimer); recTimer=setInterval(()=>{ if(alive&&!paused) rec.push(grid.map(r=>r.join('')).join('')); },500); ghostRun=ghostLoad(); }
 function recStop(){ clearInterval(recTimer); recTimer=null; if(!rec||!daily)return; const best=ghostLoad(); if(!best||score>best.score){ try{ Object.keys(localStorage).filter(k=>k.startsWith('kipp-ghost-')&&k!==ghostKey()).forEach(k=>localStorage.removeItem(k)); localStorage.setItem(ghostKey(),JSON.stringify({score,name:ini.map(v=>HS_CHARS[v]).join(''),snaps:rec})); }catch(e){} } rec=null; }
 function drawGhost(){
   if(!ghostRun||!daily||!alive)return; const i=Math.min(ghostRun.snaps.length-1,Math.floor((performance.now()-runStart)/500)); const snap=ghostRun.snaps[i]; if(!snap)return;
@@ -725,7 +737,7 @@ const quakeInterval=()=>challenge&&challenge.quakeMs?challenge.quakeMs:Math.max(
 function quakeReset(){ quakeMax=quakeInterval(); quakeT=quakeMax; quakeDir=rnd()<.5?-1:1; quakeTurns=(level>=3&&rnd()<.25)?2:1; }
 function quakeUpdate(){
   const now=performance.now(), dt=lastTick?now-lastTick:0; lastTick=now;
-  if(!quake||!alive||busy)return;
+  if(!quake||!alive||busy||paused)return;
   quakeT-=dt;
   const warn=quakeT<4500;
   document.querySelector('[data-a="tipL"]').classList.toggle('warn',warn&&(quakeDir<0||quakeTurns===2));
@@ -738,7 +750,7 @@ function quakeUpdate(){
 }
 function quakeClearWarn(){ document.querySelectorAll('.tip.warn').forEach(b=>b.classList.remove('warn')); document.getElementById('quakeBar').classList.remove('hot'); }
 function step(){
-  if(!alive||busy)return;
+  if(!alive||busy||paused)return;
   if(!cur){spawn();draw();return;}
   if(!hits(cur.m,cur.x,cur.y+1)) cur.y++;
   else { SFX.lock(); lock(); resolve(()=>{ spawn(); draw(); tutCheck(); }); }
@@ -798,16 +810,58 @@ function hsLoad(){ try{ return JSON.parse(localStorage.getItem('kipp-hs')||'{}')
 function hsList(){ return (hsLoad()[hsKey()]||[]).sort((a,b)=>b.score-a.score).slice(0,5); }
 function hsSave(name){ const all=hsLoad(); const l=all[hsKey()]||[]; l.push({name,score,lines,t:Date.now()}); all[hsKey()]=l.sort((a,b)=>b.score-a.score).slice(0,5); try{ localStorage.setItem('kipp-hs',JSON.stringify(all)); localStorage.setItem('kipp-ini',name); }catch(e){} }
 function renderIni(){ ini.forEach((v,i)=>document.getElementById('ini'+i).textContent=HS_CHARS[v]); }
-function renderHs(mine){
-  const list=hsList(); const el=document.getElementById('hsList');
-  el.innerHTML=list.length?list.map((e,i)=>`<li class="${mine&&e.t===mine?'me':''}"><span>${i+1}</span><span>${e.name}</span><span>${e.score}</span><span>${e.lines} ${T().rows}</span></li>`).join(''):'';
+// Online-Bestenliste (optional). Supabase-Projekt anlegen, supabase/highscores.sql ausführen,
+// dann hier Project-URL und anon key eintragen. Bleibt beides leer, gibt es nur die lokale Liste.
+const ONLINE={url:'',key:'',table:'highscores'};
+const onlineOn=()=>!!(ONLINE.url&&ONLINE.key);
+let hsView='local', hsMineT=null, worldCache={}, worldMine=null;
+try{ if(localStorage.getItem('kipp-hsview')==='world') hsView='world'; }catch(e){}
+const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const onlineHeaders=()=>({apikey:ONLINE.key,Authorization:'Bearer '+ONLINE.key,'Content-Type':'application/json'});
+const onlineUrl=q=>`${ONLINE.url.replace(/\/$/,'')}/rest/v1/${ONLINE.table}${q}`;
+async function worldLoad(board){
+  const r=await fetch(onlineUrl(`?board=eq.${encodeURIComponent(board)}&select=id,name,score,lines&order=score.desc,id.asc&limit=10`),{headers:onlineHeaders()});
+  if(!r.ok) throw new Error('hs '+r.status); return r.json();
 }
+async function worldSave(board,name,sc,ln){
+  const r=await fetch(onlineUrl(''),{method:'POST',headers:{...onlineHeaders(),Prefer:'return=representation'},body:JSON.stringify({board,name,score:sc,lines:ln})});
+  if(!r.ok) throw new Error('hs '+r.status); const rows=await r.json(); return rows[0];
+}
+async function worldRank(board,sc){ // Platz = Anzahl besserer Einträge + 1
+  const r=await fetch(onlineUrl(`?board=eq.${encodeURIComponent(board)}&score=gt.${sc}&select=id`),{method:'HEAD',headers:{...onlineHeaders(),Prefer:'count=exact',Range:'0-0'}});
+  const m=/\/(\d+)$/.exec(r.headers.get('content-range')||''); if(!m) throw new Error('hs range'); return +m[1]+1;
+}
+function renderHs(mine){
+  const el=document.getElementById('hsList'); const tabs=document.getElementById('hsTabs');
+  tabs.hidden=!onlineOn(); if(!onlineOn()) hsView='local';
+  tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.s===hsView));
+  if(hsView==='world'){ renderWorld(); return; }
+  const list=hsList();
+  el.innerHTML=list.length?list.map((e,i)=>`<li class="${mine&&e.t===mine?'me':''}"><span>${i+1}</span><span>${esc(e.name)}</span><span>${e.score}</span><span>${e.lines} ${T().rows}</span></li>`).join(''):'';
+}
+function renderWorld(){
+  const el=document.getElementById('hsList'); const board=hsKey(); const rows=worldCache[board];
+  if(!rows){
+    el.innerHTML=`<li class="info">${T().hsLoading}</li>`;
+    worldLoad(board).then(r=>{ worldCache[board]=r; if(hsView==='world'&&hsKey()===board) renderWorld(); })
+      .catch(()=>{ if(hsView==='world'&&hsKey()===board) el.innerHTML=`<li class="info">${T().hsOffline}</li>`; });
+    return;
+  }
+  const mine=worldMine&&worldMine.board===board?worldMine:null;
+  const inTop=mine&&rows.some(e=>e.id===mine.id);
+  el.innerHTML=(rows.length?rows.map((e,i)=>`<li class="${mine&&e.id===mine.id?'me':''}"><span>${i+1}</span><span>${esc(e.name)}</span><span>${e.score}</span><span>${e.lines} ${T().rows}</span></li>`).join(''):`<li class="info">${T().hsEmpty}</li>`)
+    +(mine&&mine.rank&&!inTop?`<li class="info me">${T().hsRank(mine.rank)}</li>`:'');
+}
+document.getElementById('hsTabs').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-s]'); if(!b)return; hsView=b.dataset.s; try{localStorage.setItem('kipp-hsview',hsView);}catch(e){} renderHs(hsMineT); SFX.move();
+});
 function endScreen(title,text){
   document.getElementById('ovTitle').textContent=title;
   document.getElementById('ovText').textContent=text;
   document.getElementById('endpanel').hidden=false; document.getElementById('settings').hidden=true; document.getElementById('tutBtn').hidden=true;
   document.getElementById('bigScore').textContent=score;
-  hsSaved=false; const qualifies=score>0&&(hsList().length<5||score>hsList()[4].score);
+  hsSaved=false; hsMineT=null; worldMine=null; worldCache={};
+  const qualifies=score>0&&(onlineOn()||hsList().length<5||score>hsList()[4].score);
   document.getElementById('initials').hidden=!qualifies; renderIni(); renderHs();
   document.getElementById('saveBtn').textContent='OK'; document.getElementById('menuBtn').textContent=T().menu;
   document.getElementById('startBtn').textContent=T().again;
@@ -850,7 +904,10 @@ document.getElementById('initials').addEventListener('click',e=>{
 document.getElementById('saveBtn').addEventListener('click',()=>{
   if(hsSaved)return; const name=ini.map(v=>HS_CHARS[v]).join(''); const t=Date.now(); hsSave(name); hsSaved=true;
   // eigene Zeile markieren
-  const all=hsLoad(); const mine=(all[hsKey()]||[]).find(e=>e.name===name&&e.score===score); renderHs(mine&&mine.t);
+  const all=hsLoad(); const mine=(all[hsKey()]||[]).find(e=>e.name===name&&e.score===score); hsMineT=mine&&mine.t; renderHs(hsMineT);
+  if(onlineOn()){ const board=hsKey(), sc=score, ln=lines;
+    worldSave(board,name,sc,ln).then(async row=>{ worldMine={board,id:row.id}; delete worldCache[board]; try{ worldMine.rank=await worldRank(board,sc); }catch(e){} if(hsView==='world') renderHs(hsMineT); }).catch(()=>{});
+  }
   document.getElementById('saveBtn').textContent=T().saved; SFX.clear(2);
 });
 document.getElementById('menuBtn').addEventListener('click',()=>{
@@ -863,6 +920,37 @@ addEventListener('keydown',e=>{
   const k=e.key.toUpperCase();
   if(HS_CHARS.includes(k)&&k.length===1){ const pos=(window._iniPos||0)%3; ini[pos]=HS_CHARS.indexOf(k); window._iniPos=pos+1; renderIni(); }
   if(e.key==='Enter') document.getElementById('saveBtn').click();
+});
+// Pause und Rückweg ins Hauptmenü, jederzeit im Spiel (Button oben rechts, Esc oder P)
+let paused=false, pausedAt=0;
+const pov=document.getElementById('pov');
+function pause(){
+  if(!alive||paused)return; paused=true; pausedAt=performance.now();
+  clearInterval(timer); softStop(); musicStop(); quakeClearWarn();
+  pov.classList.add('show'); document.getElementById('resumeBtn').focus();
+}
+function resume(){
+  if(!paused)return; paused=false; pov.classList.remove('show');
+  if(daily) runStart+=performance.now()-pausedAt; // Ghost-Replay läuft nicht weiter, solange pausiert
+  lastTick=performance.now(); musicStart(); restartTimer(); draw();
+}
+function quitToMenu(){
+  paused=false; pov.classList.remove('show');
+  if(tut){ tutEnd(); return; }
+  alive=false; clearInterval(timer); softStop(); musicStop(); cur=null; busy=false; toast=null;
+  clearInterval(recTimer); recTimer=null; rec=null; ghostRun=null; // abgebrochener Lauf zählt nicht
+  quakeClearWarn(); document.getElementById('quakeFill').style.width='0%';
+  document.getElementById('endpanel').hidden=true; document.getElementById('settings').hidden=false; document.getElementById('tutBtn').hidden=false; document.getElementById('shareBtn').hidden=true;
+  document.getElementById('ovTitle').textContent='Kipp'; document.getElementById('ovText').textContent=T().intro; document.getElementById('startBtn').textContent=T().play;
+  renderModes(); ov.classList.add('show'); draw();
+}
+document.getElementById('pauseBtn').addEventListener('click',()=>{ audio(); pause(); });
+document.getElementById('resumeBtn').addEventListener('click',()=>{ audio(); resume(); });
+document.getElementById('quitBtn').addEventListener('click',quitToMenu);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) pause(); });
+addEventListener('keydown',e=>{
+  if(e.key!=='Escape'&&e.key!=='p'&&e.key!=='P')return;
+  if(paused){ e.preventDefault(); resume(); } else if(alive){ e.preventDefault(); pause(); }
 });
 function start(){
   audio();
@@ -1018,7 +1106,7 @@ function draw(){
 }
 
 let softTimer=null;
-function softStart(){ clearInterval(softTimer); if(!alive)return; step(); softTimer=setInterval(()=>{ if(cur&&!busy){ score+=Math.round(1*mult); } step(); },55); }
+function softStart(){ clearInterval(softTimer); if(!alive||paused)return; step(); softTimer=setInterval(()=>{ if(cur&&!busy){ score+=Math.round(1*mult); } step(); },55); }
 function softStop(){ clearInterval(softTimer); softTimer=null; }
 function cycleTheme(){
   const keys=Object.keys(THEMES); themeKey=keys[(keys.indexOf(themeKey)+1)%keys.length];
@@ -1069,6 +1157,8 @@ function applyLang(){
   if(alive||!document.getElementById('shareBtn').hidden){} else { document.getElementById('ovText').textContent=t.intro; document.getElementById('startBtn').textContent=t.play; }
   if(!document.getElementById('shareBtn').hidden) document.getElementById('startBtn').textContent=t.again;
   document.getElementById('tutBtn').textContent=t.howto;
+  document.getElementById('pauseBtn').setAttribute('aria-label',t.pause); document.getElementById('povText').textContent=t.pauseText; document.getElementById('resumeBtn').textContent=t.resume; document.getElementById('quitBtn').textContent=t.mainMenu;
+  document.querySelector('#hsTabs [data-s="local"]').textContent=t.hsLocal; document.querySelector('#hsTabs [data-s="world"]').textContent=t.hsWorld;
   document.getElementById('keys').innerHTML=t.keys.map(([k,l])=>`<div><span>${l}</span><kbd>${k}</kbd></div>`).join('');
   document.getElementById('dailyNote').textContent=t.dailyNote; document.getElementById('shareBtn').textContent=t.share;
   document.getElementById('quakeBtn').setAttribute('aria-checked',quake); document.getElementById('lblQuake').textContent=t.lblQuake; document.getElementById('lblMix').textContent=t.lblMix; document.getElementById('mixBtn').setAttribute('aria-checked',mix);
@@ -1141,6 +1231,7 @@ cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',en
 addEventListener('keydown',e=>{
   const k={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'rot',ArrowDown:'soft',' ':'drop',q:'tipL',e:'tipR',Q:'tipL',E:'tipR'}[e.key];
   if(!k)return; e.preventDefault();
+  if(paused)return;
   if(!alive){ if(k==='drop'&&(document.getElementById('initials').hidden||hsSaved))start(); return; }
   k==='soft'? step() : actions[k]();
   if(e.key==='t'||e.key==='T') cycleTheme();
