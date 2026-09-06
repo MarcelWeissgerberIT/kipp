@@ -316,7 +316,7 @@ const I18N={
     overText:o=>`${o.score} points, ${o.lines} rows on ${o.n}×${o.n}, ${o.tips} tips, ${o.quakes} quakes survived.`,
     winText:o=>`${o.score} points, ${o.tips} tips, ${o.quakes} quakes. Try it with fewer tips?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} pts · ${o.lines} rows · ${o.tips} tips · ${o.quakes} quakes`,
-    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. Quakes and the bar wait with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Quakes',lblCombo:'Combo',
+    lblMaterial:'Material',lblMode:'Mode',lblBoard:'Board',lblQuake:'Quakes',lblMix:'Material mix',combo:'Combo',nextLevel:'Next level',chapter:'Chapter',howto:'How to play',next:'Next',finish:'Play!',menu:'Menu',enter:'Enter your initials',saved:'Saved',hs:'Best',hsLocal:'This device',hsWorld:'World',hsLoading:'Loading…',hsOffline:'No connection',hsEmpty:'No entries yet – be the first!',hsRank:r=>`Your rank: ${r} worldwide`,faster:'Faster!',pause:'Pause',resume:'Resume',mainMenu:'Main menu',pauseKicker:'Everything holds still',pauseText:'The board stays as it is. Quakes and the bar wait with you.',pauseHint:'Esc / P to resume',lblScore:'Score',lblRows:'Rows',lblLevel:'Level',lblNext:'Next',lblCharge:'Tip charge',lblTips:'Tips',lblQuakes:'Quakes',lblCombo:'Combo',
     tut:[
       'Tap left or right of the piece to move it. Bring it to the left edge.',
       'Tap the piece to rotate it. Try it once.',
@@ -335,7 +335,7 @@ const I18N={
     overText:o=>`${o.score} Punkte, ${o.lines} Reihen auf ${o.n}×${o.n}, ${o.tips} Kipps, ${o.quakes} Beben überstanden.`,
     winText:o=>`${o.score} Punkte, ${o.tips} Kipps, ${o.quakes} Beben. Schaffst du es mit weniger Kipps?`,
     shareText:o=>`Kipp ${o.mode} · ${o.score} Punkte · ${o.lines} Reihen · ${o.tips} Kipps · ${o.quakes} Beben`,
-    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Beben und Balken warten mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Beben',lblCombo:'Kombo',
+    lblMaterial:'Material',lblMode:'Modus',lblBoard:'Brett',lblQuake:'Beben',lblMix:'Material-Mix',combo:'Kombo',nextLevel:'Nächstes Level',chapter:'Kapitel',howto:'Wie spielt man?',next:'Weiter',finish:'Spielen!',menu:'Menü',enter:'Deine drei Zeichen',saved:'Gespeichert',hs:'Bestenliste',hsLocal:'Dieses Gerät',hsWorld:'Welt',hsLoading:'Lade…',hsOffline:'Keine Verbindung',hsEmpty:'Noch keine Einträge – sei der Erste!',hsRank:r=>`Dein Platz: ${r} weltweit`,faster:'Schneller!',pause:'Pause',resume:'Weiter',mainMenu:'Hauptmenü',pauseKicker:'Alles steht still',pauseText:'Das Brett bleibt, wie es ist. Beben und Balken warten mit.',pauseHint:'Esc / P zum Fortsetzen',lblScore:'Score',lblRows:'Reihen',lblLevel:'Level',lblNext:'Next',lblCharge:'Kipp-Ladung',lblTips:'Kipps',lblQuakes:'Beben',lblCombo:'Kombo',
     tut:[
       'Tippe links oder rechts neben den Stein, um ihn zu bewegen. Bring ihn an den linken Rand.',
       'Tippe auf den Stein, um ihn zu drehen. Einmal probieren.',
@@ -609,6 +609,14 @@ const SFX={
   over:()=>{ [0,-3,-7,-12].forEach((st,i)=>tone(330*Math.pow(2,st/12),330*Math.pow(2,st/12)*.98,.35,'triangle',.4,i*.22)); },
 };
 let lastCharges=-1, combo=0, comboAt=0, bestCombo=1, endSnap=null, lastStars=0;
+// Tempo: in Endlos und Tagesbrett alle 30 s reine Spielzeit 6 % schneller, unabhängig vom Level
+let speedT0=0, speedStep=0;
+const tempo=()=>(mode==='endless'||mode==='daily')?Math.pow(.94,speedStep):1;
+function tempoTick(){
+  if(tut)return; const st=Math.floor((performance.now()-speedT0)/30000); if(st===speedStep)return;
+  speedStep=st; restartTimer();
+  if(st>0&&tempo()<1){ toast={text:T().faster,sub:'',until:performance.now()+900}; SFX.rot(); }
+}
 // Ghost: Brett-Schnappschüsse der besten Tagesrunde alle 500 ms, als Miniatur mitlaufend
 let ghostRun=null, rec=null, recTimer=null, runStart=0;
 const ghostKey=()=>'kipp-ghost-'+dayKey();
@@ -810,6 +818,7 @@ const quakeInterval=()=>challenge&&challenge.quakeMs?challenge.quakeMs:Math.max(
 function quakeReset(){ quakeMax=quakeInterval(); quakeT=quakeMax; quakeDir=rnd()<.5?-1:1; quakeTurns=(level>=3&&rnd()<.25)?2:1; }
 function quakeUpdate(){
   const now=performance.now(), dt=lastTick?now-lastTick:0; lastTick=now;
+  if(alive&&!paused) tempoTick();
   if(!quake||!alive||busy||paused)return;
   quakeT-=dt;
   const warn=quakeT<4500;
@@ -843,7 +852,7 @@ function drop(){
   const now=performance.now(); combo=(now-comboAt<1300)?combo+1:1; comboAt=now; bestCombo=Math.max(bestCombo,combo); if(combo>=3){ score+=Math.round(combo*5*mult); toast={text:`${T().combo} ×${combo}`,sub:'',kind:'combo',until:now+1000}; }
   SFX.drop(); lock(); resolve(()=>{ spawn(); draw(); tutCheck(); });
 }
-function restartTimer(){ clearInterval(timer); timer=setInterval(step,Math.max(110,(700-(level-1)*60)*THEME.speed)); }
+function restartTimer(){ clearInterval(timer); timer=setInterval(step,Math.max(110,(700-(level-1)*60)*THEME.speed*tempo())); }
 setInterval(quakeUpdate,100);
 setInterval(()=>{ if(ghostRun&&daily&&alive&&!busy) draw(); },500);
 function gameOver(){
@@ -1012,6 +1021,7 @@ function pause(){
 function resume(){
   if(!paused)return; paused=false; pov.classList.remove('show');
   if(daily) runStart+=performance.now()-pausedAt; // Ghost-Replay läuft nicht weiter, solange pausiert
+  speedT0+=performance.now()-pausedAt;
   lastTick=performance.now(); musicStart(); restartTimer(); draw();
 }
 function quitToMenu(){
@@ -1034,7 +1044,7 @@ addEventListener('keydown',e=>{
   if(paused){ e.preventDefault(); resume(); } else if(alive){ e.preventDefault(); pause(); }
 });
 function start(){
-  audio(); bestCombo=1; popups=[]; pops.clear();
+  audio(); bestCombo=1; popups=[]; pops.clear(); speedT0=performance.now(); speedStep=0;
   if(mode!=='tutorial'){ tut=null; document.getElementById('hint').hidden=true; }
   daily=mode==='daily'; story=mode==='story'?storyLevel(storyCh,storyLv):null; challenge=mode==='challenge'?CHALLENGES[chIdx]:story; if(mode!=='endless') mix=false;
   if(story){ themeKey=story.theme; }
