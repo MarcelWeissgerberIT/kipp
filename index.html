@@ -812,12 +812,13 @@ function hsSave(name){ const all=hsLoad(); const l=all[hsKey()]||[]; l.push({nam
 function renderIni(){ ini.forEach((v,i)=>document.getElementById('ini'+i).textContent=HS_CHARS[v]); }
 // Online-Bestenliste (optional). Supabase-Projekt anlegen, supabase/highscores.sql ausführen,
 // dann hier Project-URL und anon key eintragen. Bleibt beides leer, gibt es nur die lokale Liste.
-const ONLINE={url:'https://ebsjrhgftwqscmmbnsfq.supabase.co',key:'',table:'highscores'};
+const ONLINE={url:'https://ebsjrhgftwqscmmbnsfq.supabase.co',key:'sb_publishable_rUUgCvaDg0IUydOnJ2lBhw_X_-ihNL6',table:'highscores'};
 const onlineOn=()=>!!(ONLINE.url&&ONLINE.key);
 let hsView='local', hsMineT=null, worldCache={}, worldMine=null;
 try{ if(localStorage.getItem('kipp-hsview')==='world') hsView='world'; }catch(e){}
 const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const onlineHeaders=()=>({apikey:ONLINE.key,Authorization:'Bearer '+ONLINE.key,'Content-Type':'application/json'});
+// Alte anon-Keys (JWT, beginnen mit eyJ) brauchen zusätzlich den Authorization-Header, neue sb_publishable_-Keys nur apikey.
+const onlineHeaders=()=>{ const h={apikey:ONLINE.key,'Content-Type':'application/json'}; if(ONLINE.key.startsWith('eyJ')) h.Authorization='Bearer '+ONLINE.key; return h; };
 const onlineUrl=q=>`${ONLINE.url.replace(/\/$/,'')}/rest/v1/${ONLINE.table}${q}`;
 async function worldLoad(board){
   const r=await fetch(onlineUrl(`?board=eq.${encodeURIComponent(board)}&select=id,name,score,lines&order=score.desc,id.asc&limit=10`),{headers:onlineHeaders()});
